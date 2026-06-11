@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PawShot — Captura. Rescata. Adopta.</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
   :root{
     --bg:#f3f1ef;
@@ -19,6 +21,8 @@
     --red:#e0463a;
     --yellow:#f4b94b;
     --purple:#7c4dff;
+    --blue:#3777e3;
+    --orange:#f08a3e;
     --shadow:0 30px 60px rgba(0,0,0,.18), 0 8px 18px rgba(0,0,0,.08);
   }
   *{box-sizing:border-box}
@@ -26,10 +30,8 @@
   body{display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh}
 
   /* ================= Layout ================ */
-  .stage{
-    display:flex;gap:32px;align-items:center;justify-content:center;width:100%;max-width:1200px;flex-wrap:wrap;
-  }
-  .side-info{max-width:320px}
+  .stage{display:flex;gap:32px;align-items:center;justify-content:center;width:100%;max-width:1200px;flex-wrap:wrap}
+  .side-info{max-width:340px}
   .side-info h1{font-size:28px;margin:0 0 10px;letter-spacing:-.5px}
   .side-info p{color:var(--muted);font-size:14px;line-height:1.55;margin:0 0 12px}
   .side-info .pill{display:inline-block;background:var(--ink);color:#fff;padding:8px 14px;border-radius:999px;font-size:12px;letter-spacing:.5px;margin-bottom:14px}
@@ -56,7 +58,6 @@
     padding:8px 22px 0;font-size:12px;font-weight:600;color:#111;
   }
   .status-bar .right{display:flex;gap:6px;align-items:center}
-  .status-bar .dot{width:6px;height:6px;border-radius:50%;background:#111}
   .view{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;background:var(--white)}
   .view::-webkit-scrollbar{width:0}
   .view.dark{background:#0e0e0e;color:#fff}
@@ -67,11 +68,11 @@
   }
   .bottom-nav button{
     background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;
-    font-size:10.5px;color:#9c9c9c;cursor:pointer;padding:6px 4px;
+    font-size:10.5px;color:#9c9c9c;cursor:pointer;padding:6px 4px;font-family:inherit;
   }
   .bottom-nav button .ic{font-size:18px;line-height:1}
   .bottom-nav button.active{color:var(--ink);font-weight:600}
-  .bottom-nav button.active .ic{transform:scale(1.05)}
+  .bottom-nav button.active .ic{transform:scale(1.1)}
 
   /* ================ Common UI ============== */
   .pad{padding:18px 22px}
@@ -88,7 +89,7 @@
     background:none;border:0;font-size:20px;cursor:pointer;color:#111;padding:0;line-height:1;
   }
   .top-app-bar .right{display:flex;gap:14px;align-items:center;color:#111}
-  .top-app-bar .right .icon-btn{background:none;border:0;cursor:pointer;font-size:18px;color:#111}
+  .top-app-bar .right .icon-btn{background:none;border:0;cursor:pointer;font-size:18px;color:#111;font-family:inherit}
 
   .input,.select,.textarea{
     width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
@@ -100,7 +101,7 @@
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
     background:#111;color:#fff;border:0;border-radius:999px;padding:14px 18px;width:100%;
-    font-size:14.5px;font-weight:600;cursor:pointer;letter-spacing:.2px;
+    font-size:14.5px;font-weight:600;cursor:pointer;letter-spacing:.2px;font-family:inherit;
   }
   .btn:active{transform:translateY(1px)}
   .btn.ghost{background:#fff;color:#111;border:1px solid var(--line)}
@@ -116,8 +117,8 @@
   .chip.active{background:#111;color:#fff}
   .chip.dot-r{background:#fde7e4;color:#a52a1d}
   .chip.dot-g{background:#defaee;color:#147346}
-  .chip.dot-u{background:#111;color:#fff}
-  .chip.dot-w{background:#fff;color:#111;border:1px solid #111}
+  .chip.dot-y{background:#fff4d6;color:#8a5a00}
+  .chip.dot-b{background:#e7eefa;color:#1d4a8c}
 
   .card{
     background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center;
@@ -149,7 +150,7 @@
   .tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:10px}
   .tabs button{
     flex:1;background:none;border:0;padding:11px 8px;font-size:13px;color:#888;font-weight:600;cursor:pointer;
-    border-bottom:2px solid transparent;
+    border-bottom:2px solid transparent;font-family:inherit;
   }
   .tabs button.active{color:#111;border-color:#111}
 
@@ -160,10 +161,22 @@
   .stepbar .line.on{background:#111}
 
   .upload{
-    border:1.5px dashed #d6d3ce;border-radius:16px;background:#faf8f5;height:160px;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;color:#777;font-size:13px;gap:6px;cursor:pointer;
+    border:1.5px dashed #d6d3ce;border-radius:16px;background:#faf8f5;min-height:160px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:#777;font-size:13px;gap:6px;cursor:pointer;padding:12px;
   }
   .upload .ic{font-size:26px}
+  .upload.has-files{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;align-items:flex-start;background:#fff;border-style:solid;border-color:var(--line);gap:8px}
+  .upload .preview{position:relative;width:88px;height:88px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#f3f1ee}
+  .upload .preview img,.upload .preview video{width:100%;height:100%;object-fit:cover;display:block}
+  .upload .preview .rm{
+    position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;border:0;border-radius:50%;
+    width:20px;height:20px;font-size:12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;
+  }
+  .upload .add-more{
+    width:88px;height:88px;border:1.5px dashed #d6d3ce;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    color:#aaa;font-size:28px;cursor:pointer;background:#faf8f5;
+  }
+  .upload .add-more:hover{border-color:#111;color:#111}
 
   .toast{
     position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#111;color:#fff;
@@ -172,44 +185,98 @@
   }
   .toast.show{opacity:1;transform:translate(-50%,-6px)}
 
-  /* ============== Splash ============== */
-  .splash{height:100%;background:#0e0e0e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 30px 38px;text-align:center}
-  .splash .logo{width:96px;height:96px;border-radius:50%;background:#1c1c1c;display:flex;align-items:center;justify-content:center;font-size:42px;color:#fff;border:1px solid #2a2a2a}
-  .splash h1{font-size:34px;margin:18px 0 6px;letter-spacing:-1px}
-  .splash .tag{color:#bdbdbd;font-size:14.5px;margin-bottom:8px}
-  .splash .sub{color:#8e8e8e;font-size:12.5px;max-width:240px}
-  .splash .btn{background:#fff;color:#111}
-  .splash .dots{display:flex;gap:6px;justify-content:center;margin-top:14px}
-  .splash .dots span{width:18px;height:4px;border-radius:3px;background:#3a3a3a}
-  .splash .dots span.on{background:#fff}
+  /* ============== Login (Entry) ============== */
+  .login-bg{
+    height:100%;background:linear-gradient(180deg,#0e0e0e 0%,#1c1c1c 38%,#fff 38%,#fff 100%);
+    display:flex;flex-direction:column;
+  }
+  .login-top{padding:42px 22px 22px;color:#fff;text-align:center}
+  .login-top .logo{
+    width:64px;height:64px;border-radius:50%;background:#1f1f1f;display:flex;align-items:center;justify-content:center;
+    font-size:30px;margin:0 auto 8px;border:1px solid #2f2f2f;
+  }
+  .login-top h1{font-size:26px;margin:6px 0 4px;letter-spacing:-.5px}
+  .login-top .tag{color:#bdbdbd;font-size:12.5px;margin-bottom:10px}
+  .login-card{
+    background:#fff;border-radius:24px 24px 0 0;padding:22px;flex:1;
+    box-shadow:0 -10px 30px rgba(0,0,0,.15);overflow-y:auto;
+  }
+  .login-card h3{margin:0 0 4px;font-size:16px}
+  .login-card .muted{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+
+  .demo-user{
+    display:flex;align-items:center;gap:12px;background:#fafaf8;border:1px solid var(--line);
+    border-radius:14px;padding:11px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;
+  }
+  .demo-user:hover{border-color:#111;background:#fff}
+  .demo-user .av{width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;border:1px solid var(--line)}
+  .demo-user .info{flex:1;min-width:0}
+  .demo-user .name{font-weight:700;font-size:13.5px}
+  .demo-user .role{font-size:11.5px;color:var(--muted)}
+  .demo-user .go{color:#111;font-weight:700;font-size:14px}
+
+  .divider{display:flex;align-items:center;gap:10px;color:#aaa;font-size:11px;margin:14px 0}
+  .divider:before,.divider:after{content:"";flex:1;height:1px;background:#e6e3df}
 
   /* ============== Map ============== */
   .map{
-    position:relative;height:430px;background:#e9e6e1;background-image:
-      linear-gradient(#dad6d0 1px,transparent 1px),
-      linear-gradient(90deg,#dad6d0 1px,transparent 1px);
-    background-size:42px 42px;background-position:0 0,0 0;
+    position:relative;height:380px;background:#e4eadf;
     overflow:hidden;border-bottom:1px solid var(--line);
   }
-  .map .street{position:absolute;background:#cfcac4;border-radius:6px}
+  .map-canvas{
+    position:absolute;inset:0;overflow:hidden;cursor:grab;touch-action:none;user-select:none;
+  }
+  .map-canvas.grabbing{cursor:grabbing}
+  .map-inner{
+    position:absolute;top:0;left:0;width:780px;height:650px;
+    background:#e4eadf;
+    background-image:
+      linear-gradient(#d3dac8 1px,transparent 1px),
+      linear-gradient(90deg,#d3dac8 1px,transparent 1px);
+    background-size:42px 42px;
+  }
+  .map-recenter{
+    position:absolute;right:14px;bottom:84px;width:42px;height:42px;border-radius:50%;background:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:16px;border:0;cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,.12);z-index:3;font-family:inherit;
+  }
+  .map .park{position:absolute;background:#c8d6a5;border-radius:8px;opacity:.7}
+  .map .park-label{position:absolute;font-size:9.5px;color:#3d5a1e;font-weight:700;letter-spacing:.5px;text-transform:uppercase;pointer-events:none}
+  .map .street{position:absolute;background:#fff;box-shadow:inset 0 0 0 1px #e3dfd5}
+  .map .street-name{
+    position:absolute;font-size:9px;color:#777;font-weight:600;background:rgba(255,255,255,.7);padding:1px 4px;border-radius:3px;pointer-events:none;
+  }
+  .map .district-label{
+    position:absolute;top:14px;right:14px;background:rgba(255,255,255,.95);border:1px solid var(--line);
+    padding:6px 10px;border-radius:10px;font-size:11px;color:#444;font-weight:600;z-index:3;pointer-events:none;
+  }
   .map .pin{
-    position:absolute;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid #fff;
-    display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,.18);
-    cursor:pointer;transform:translate(-50%,-100%);
+    position:absolute;width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid #fff;
+    display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,.22);
+    cursor:pointer;transform:translate(-50%,-100%);transition:transform .15s;
   }
-  .map .pin.r{background:#e3b35b}
-  .map .pin.g{background:#2fa56a;color:#fff}
-  .map .pin.b{background:#3777e3;color:#fff}
-  .map .pin.shop{background:#7c4dff;color:#fff;border-color:#fff}
+  .map .pin:hover{transform:translate(-50%,-100%) scale(1.1);z-index:5}
+  .map .pin.r{background:#fde7e4;color:#a52a1d}
+  .map .pin.g{background:#defaee;color:#147346}
+  .map .pin.b{background:#e7eefa;color:#1d4a8c}
+  .map .pin.shop{background:#ede4ff;color:#5a32cc}
+  .map .pin.hazard{background:#fff4d6;color:#8a5a00;animation:pulse 2s ease-in-out infinite}
+  .map .pin.hazard.crit{background:#fde7e4;color:#a52a1d}
+  @keyframes pulse {
+    0%,100%{box-shadow:0 4px 10px rgba(0,0,0,.22)}
+    50%{box-shadow:0 0 0 6px rgba(240,138,62,.25),0 4px 10px rgba(0,0,0,.22)}
+  }
   .map .pin .label{
-    position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+    position:absolute;top:-32px;left:50%;transform:translateX(-50%);
     background:#111;color:#fff;font-size:10.5px;padding:5px 8px;border-radius:8px;white-space:nowrap;font-weight:600;
+    pointer-events:none;opacity:0;transition:opacity .15s;z-index:6;
   }
+  .map .pin:hover .label{opacity:1}
   .map .pin .label:after{
     content:"";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#111;
   }
   .map-toolbar{
-    position:absolute;left:14px;right:14px;top:14px;display:flex;gap:10px;align-items:center;
+    position:absolute;left:14px;right:14px;top:14px;display:flex;gap:10px;align-items:center;z-index:3;
   }
   .map-toolbar .search{
     flex:1;background:#fff;border-radius:999px;padding:11px 16px;display:flex;align-items:center;gap:8px;font-size:13px;color:#666;
@@ -217,28 +284,49 @@
   }
   .map-toolbar .ibtn{
     width:42px;height:42px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;
-    box-shadow:0 8px 20px rgba(0,0,0,.08);border:0;cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);border:0;cursor:pointer;font-family:inherit;
   }
   .map-chips{
-    position:absolute;top:70px;left:14px;right:14px;display:flex;gap:8px;overflow-x:auto;
+    position:absolute;top:70px;left:14px;right:14px;display:flex;gap:6px;overflow-x:auto;z-index:3;
   }
   .map-chips::-webkit-scrollbar{display:none}
+  .map-chips .chip{
+    background:rgba(255,255,255,.95);box-shadow:0 4px 10px rgba(0,0,0,.08);border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .map-chips .chip.active{background:#111;color:#fff;border-color:#111}
   .fab{
     position:absolute;right:18px;bottom:18px;width:54px;height:54px;border-radius:50%;background:#111;color:#fff;
     display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 12px 24px rgba(0,0,0,.25);
-    border:0;
+    border:0;font-family:inherit;
+  }
+  .fab-label{
+    position:absolute;right:80px;bottom:30px;background:#111;color:#fff;padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;
+    box-shadow:0 8px 18px rgba(0,0,0,.2);pointer-events:none;
   }
   .map-legend{
-    display:flex;gap:14px;justify-content:center;padding:10px 12px;border-bottom:1px solid var(--line);font-size:11.5px;color:#444;
+    display:flex;gap:10px;justify-content:center;padding:10px 12px;border-bottom:1px solid var(--line);font-size:11px;color:#444;flex-wrap:wrap;
   }
-  .map-legend span{display:flex;align-items:center;gap:6px}
+  .map-legend span{display:flex;align-items:center;gap:5px}
   .map-legend .d{width:10px;height:10px;border-radius:50%}
+
+  .quick-actions{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 18px 4px;
+  }
+  .quick-actions .qa{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;cursor:pointer;
+    display:flex;align-items:center;gap:10px;
+  }
+  .quick-actions .qa .ic{width:36px;height:36px;border-radius:12px;background:#f3f1ee;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .quick-actions .qa.tips .ic{background:#defaee;color:#147346}
+  .quick-actions .qa.hazards .ic{background:#fff4d6;color:#8a5a00}
+  .quick-actions .qa .t{font-weight:700;font-size:13px;margin:0}
+  .quick-actions .qa .s{font-size:11px;color:var(--muted);margin:2px 0 0}
 
   /* Dog illustration */
   .dog-art{
     height:170px;background:#f5f3ef;display:flex;align-items:center;justify-content:center;font-size:90px;
   }
-  .dog-art.bigger{height:230px;font-size:140px}
 
   /* PawPoints */
   .points-hero{
@@ -256,7 +344,7 @@
   .promo .t{font-weight:700;font-size:13.5px}
   .promo .s{font-size:11.5px;color:#7a5a17}
   .promo button{
-    background:#111;color:#fff;border:0;border-radius:999px;padding:8px 12px;font-size:11.5px;font-weight:600;cursor:pointer;
+    background:#111;color:#fff;border:0;border-radius:999px;padding:8px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;
   }
 
   /* Chat */
@@ -269,8 +357,8 @@
   .chat-bar{
     display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:#fff;
   }
-  .chat-bar input{flex:1;border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-size:13.5px;outline:none}
-  .chat-bar button{background:#111;color:#fff;border:0;border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:16px}
+  .chat-bar input{flex:1;border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-size:13.5px;outline:none;font-family:inherit}
+  .chat-bar button{background:#111;color:#fff;border:0;border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:16px;font-family:inherit}
   .chat-context{background:#f7f5f2;padding:10px 14px;font-size:12px;color:#444;border-bottom:1px solid var(--line)}
 
   /* Notifications */
@@ -312,40 +400,37 @@
   .act-card{
     background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;gap:12px;align-items:center;margin-bottom:10px;
   }
-  .act-card .ph{width:60px;height:60px;border-radius:14px;background:#f4f1ec;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+  .act-card .ph{width:54px;height:54px;border-radius:14px;background:#f4f1ec;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
   .act-card .info{flex:1;min-width:0}
-  .act-card .info .t{font-weight:700;font-size:14px;margin:0}
-  .act-card .info .s{color:var(--muted);font-size:12px;margin:2px 0 0}
+  .act-card .info .t{font-weight:700;font-size:13.5px;margin:0}
+  .act-card .info .s{color:var(--muted);font-size:11.5px;margin:2px 0 0}
   .act-card .actions{display:flex;flex-direction:column;gap:6px}
 
   /* Certifications */
   .cert{
     background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px;
   }
-  .cert .head{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:6px}
+  .cert .head{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:6px;font-size:14px}
   .cert .meta{color:var(--muted);font-size:12px;margin-bottom:10px}
-  .cert .lock{color:#aaa}
+  .cert .lock{color:#aaa;font-size:11px}
   .cert.bronze{border-left:6px solid #c08243}
-  .cert.silver{border-left:6px solid #b3b3b3;opacity:.85}
-  .cert.gold{border-left:6px solid #d4af37;opacity:.7}
+  .cert.silver{border-left:6px solid #b3b3b3;opacity:.9}
+  .cert.gold{border-left:6px solid #d4af37;opacity:.75}
 
   /* Profile */
-  .profile-head{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:#0e0e0e;color:#fff}
+  .profile-head{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px;background:#0e0e0e;color:#fff}
   .profile-head .avatar{width:74px;height:74px;border-radius:50%;background:#1c1c1c;display:flex;align-items:center;justify-content:center;font-size:32px;border:1px solid #2a2a2a}
   .profile-head .name{font-size:17px;font-weight:700;margin-top:6px}
   .profile-head .role{font-size:12px;color:#bdbdbd}
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:14px;background:#fff;border-bottom:1px solid var(--line)}
   .stats .s{text-align:center}
   .stats .s .n{font-weight:700;font-size:17px}
-  .stats .s .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .stats .s .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 
   /* Detail dog */
   .dog-hero{position:relative;background:#f6f3ee;height:200px;display:flex;align-items:center;justify-content:center;font-size:110px}
   .dog-hero .nav{position:absolute;top:14px;display:flex;justify-content:space-between;left:14px;right:14px}
-  .dog-hero .nav button{width:36px;height:36px;border-radius:50%;background:#fff;border:0;font-size:16px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,.06)}
-
-  .pill-tabs{display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap}
-  .pill-tabs .chip{font-size:11.5px}
+  .dog-hero .nav button{width:36px;height:36px;border-radius:50%;background:#fff;border:0;font-size:16px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,.06);font-family:inherit}
 
   /* Resources row */
   .res-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px}
@@ -353,40 +438,99 @@
   .res-row .r .ic{font-size:22px;display:block;margin-bottom:4px}
   .res-row .r .n{font-weight:700;font-size:12px}
 
-  /* Auth pages */
-  .auth{padding:28px 22px;display:flex;flex-direction:column;min-height:100%}
-  .auth .logo-mini{width:54px;height:54px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;margin:18px auto 8px}
-  .auth h2{text-align:center;margin:0 0 6px;font-size:22px}
-  .auth p.intro{text-align:center;color:var(--muted);font-size:13px;margin:0 0 18px}
-  .auth .switch{text-align:center;font-size:13px;margin-top:14px;color:var(--muted)}
-  .auth .switch b{color:#111;cursor:pointer}
-  .social{display:flex;gap:10px;justify-content:center;margin-top:14px}
-  .social button{
-    width:46px;height:46px;border-radius:50%;background:#fff;border:1px solid var(--line);cursor:pointer;font-size:18px;
+  /* Tips screens */
+  .tip-hero{
+    background:linear-gradient(135deg,#defaee,#b6e8cd);padding:16px 18px;border-radius:16px;margin:14px 18px;
+    display:flex;gap:12px;align-items:center;
   }
-  .divider{display:flex;align-items:center;gap:10px;color:#aaa;font-size:11px;margin:14px 0}
-  .divider:before,.divider:after{content:"";flex:1;height:1px;background:#e6e3df}
-
-  /* Profile selection */
-  .role-card{
-    display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:18px;padding:14px;cursor:pointer;
-    margin-bottom:10px;background:#fff;
+  .tip-hero .ic{font-size:30px}
+  .tip-hero .t{font-weight:700;font-size:14.5px;margin:0}
+  .tip-hero .s{font-size:11.5px;color:#266b48;margin:2px 0 0}
+  .tip-card{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;
   }
-  .role-card:hover{border-color:#111}
-  .role-card.active{border:1.5px solid #111;background:#fafaf8}
-  .role-card .ic{
-    width:46px;height:46px;border-radius:14px;background:#f3f1ee;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+  .tip-card .head{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+  .tip-card .head .ic{width:30px;height:30px;border-radius:10px;background:#f3f1ee;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .tip-card .head .t{font-weight:700;font-size:13.5px;margin:0;flex:1}
+  .tip-card.danger .head .ic{background:#fde7e4;color:#a52a1d}
+  .tip-card.warn .head .ic{background:#fff4d6;color:#8a5a00}
+  .tip-card.good .head .ic{background:#defaee;color:#147346}
+  .tip-card.info .head .ic{background:#e7eefa;color:#1d4a8c}
+  .tip-card.tip .head .ic{background:#ede4ff;color:#5a32cc}
+  .tip-card .body{font-size:12.5px;line-height:1.55;color:#333}
+
+  /* Hazards */
+  .hazard-banner{
+    background:#fff4d6;border:1px solid #f0d699;border-radius:14px;padding:12px;margin:14px 18px;
+    display:flex;gap:10px;align-items:center;
   }
-  .role-card .body{flex:1}
-  .role-card .body .t{font-weight:700;font-size:14.5px;margin:0}
-  .role-card .body .s{color:var(--muted);font-size:12px;margin:2px 0 0;line-height:1.4}
-  .role-card .arrow{color:#bbb}
+  .hazard-banner .ic{font-size:20px}
+  .hazard-banner .t{font-weight:700;font-size:13.5px}
+  .hazard-banner .s{font-size:11.5px;color:#7a5a17;margin-top:2px}
+  .hazard-item{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;
+  }
+  .hazard-item .row1{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .hazard-item .row1 .ic{
+    width:46px;height:46px;min-width:46px;min-height:46px;border-radius:50%;
+    background:#fff4d6;color:#8a5a00;display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;aspect-ratio:1/1;line-height:1;
+  }
+  .hazard-item .row1 .ic.crit{background:#fde7e4;color:#a52a1d}
+  .hazard-item .row1 .ic.med{background:#fff4d6;color:#8a5a00}
+  .hazard-item .row1 .ic.info{background:#e7eefa;color:#1d4a8c}
+  .hazard-item .row1 .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .hazard-item .row1 .info .t{font-weight:700;font-size:13.5px;margin:0;line-height:1.3}
+  .hazard-item .row1 .info .loc{font-size:11.5px;color:var(--muted);margin:0;line-height:1.3}
+  .hazard-item .row1 .info{flex:1;min-width:0}
+  .hazard-item .row1 .t{font-weight:700;font-size:13.5px;margin:0}
+  .hazard-item .row1 .loc{font-size:11.5px;color:var(--muted);margin:2px 0 0}
+  .hazard-item .meta-row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);margin-top:8px}
+  .hazard-item .meta-row .actions{display:flex;gap:6px}
+  .hazard-item .meta-row .actions button{
+    background:#f3f1ee;border:0;padding:5px 10px;border-radius:999px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;
+  }
+  .hazard-item .meta-row .actions button.up{background:#defaee;color:#147346}
 
-  /* Reports detail page */
-  .reporte-status{padding:10px 18px;font-size:13px;background:#f7f5f2;border-bottom:1px solid var(--line)}
-  .reporte-status b{color:#a52a1d}
+  /* Vet discounts */
+  .vet-card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px;
+  }
+  .vet-card .head{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+  .vet-card .head .av{width:46px;height:46px;border-radius:12px;background:#f3f1ee;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .vet-card .head .info{flex:1}
+  .vet-card .head .t{font-weight:700;font-size:14px;margin:0}
+  .vet-card .head .s{font-size:11.5px;color:var(--muted);margin:2px 0 0}
+  .vet-card .body{font-size:12.5px;color:#333;margin-bottom:8px}
+  .vet-card .disc{display:flex;justify-content:space-between;align-items:center}
+  .vet-card .disc .pts{font-size:11.5px;color:var(--muted)}
+  .vet-card .disc .pts b{color:#111}
 
-  /* Helper */
+  /* Side menu */
+  .side-overlay{
+    position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:9;opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .side-overlay.open{opacity:1;pointer-events:auto}
+  .side-menu{
+    position:absolute;left:0;top:0;bottom:0;width:75%;background:#fff;z-index:10;
+    transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;
+    box-shadow:6px 0 24px rgba(0,0,0,.15);
+  }
+  .side-menu.open{transform:translateX(0)}
+  .side-menu .top{padding:24px 20px;background:#0e0e0e;color:#fff}
+  .side-menu .top .avatar{width:46px;height:46px;border-radius:50%;background:#1c1c1c;display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid #2a2a2a;margin-bottom:8px}
+  .side-menu .top .name{font-weight:700;font-size:15px}
+  .side-menu .top .role{font-size:11.5px;color:#bdbdbd}
+  .side-menu .items{flex:1;padding:10px 14px;overflow-y:auto}
+  .side-menu .items button{
+    width:100%;background:none;border:0;display:flex;align-items:center;gap:12px;padding:12px 10px;
+    font-size:13.5px;cursor:pointer;text-align:left;color:#111;border-radius:10px;font-family:inherit;
+  }
+  .side-menu .items button:hover{background:#f7f5f2}
+  .side-menu .items button .ic{width:28px;height:28px;border-radius:8px;background:#f3f1ee;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .side-menu .items .sep{height:1px;background:var(--line);margin:8px 6px}
+
+  /* Helpers */
   .row{display:flex;gap:8px}
   .row > *{flex:1}
   .mt0{margin-top:0}
@@ -397,9 +541,7 @@
   .small{font-size:12px;color:var(--muted)}
   .hidden{display:none !important}
   .between{display:flex;justify-content:space-between;align-items:center}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
-  /* Sidebar helper */
   @media (max-width: 900px){
     .side-info{display:none}
     .stage{padding:0}
@@ -415,15 +557,14 @@
 
 <div class="stage">
   <div class="side-info">
-    <span class="pill">DEMO INTERACTIVA</span>
     <h1>PawShot — Captura. Rescata. Adopta.</h1>
-    <p>Prototipo navegable de la app de rescate y adopción canina presentado en el laboratorio. Recorre las 23 pantallas como Ciudadano, Adoptante o Albergue.</p>
+    <p>Una comunidad para reportar perros en la calle, encontrar familias adoptivas y mantener tu zona segura. Únete: crea tu cuenta o entra con una cuenta de ejemplo.</p>
     <div class="demo-creds">
-      <strong>Cuentas de prueba</strong>
-      Ciudadano · <code>maria@demo.com</code> / <code>1234</code><br/>
-      Adoptante · <code>juan@demo.com</code> / <code>1234</code><br/>
-      Albergue · <code>albergue@demo.com</code> / <code>1234</code><br/>
-      <span class="small">o crea tu propia cuenta desde el botón <b>Empezar</b>.</span>
+      <strong>Cuentas de ejemplo</strong>
+      🧑 Ciudadano · <code>maria@demo.com</code> / <code>1234</code><br/>
+      ❤️ Adoptante · <code>juan@demo.com</code> / <code>1234</code><br/>
+      🤝 Albergue · <code>albergue@demo.com</code> / <code>1234</code><br/>
+      <span class="small">o regístrate desde la app.</span>
     </div>
   </div>
 
@@ -437,11 +578,13 @@
         <div class="view" id="view"></div>
         <div class="bottom-nav hidden" id="bottomNav">
           <button data-tab="map"><span class="ic">🗺️</span><span>Mapa</span></button>
-          <button data-tab="activity"><span class="ic">📂</span><span>Actividad</span></button>
+          <button data-tab="tips"><span class="ic">💡</span><span>Consejos</span></button>
           <button data-tab="points"><span class="ic">🏆</span><span>Puntos</span></button>
-          <button data-tab="notif"><span class="ic">🔔</span><span>Notif</span></button>
+          <button data-tab="activity"><span class="ic">📂</span><span>Actividad</span></button>
           <button data-tab="profile"><span class="ic">👤</span><span>Perfil</span></button>
         </div>
+        <div class="side-overlay" id="overlay"></div>
+        <div class="side-menu" id="sideMenu"></div>
       </div>
     </div>
   </div>
@@ -450,14 +593,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ==========================================================
-   PawShot — single-file SPA simulation
-   ========================================================== */
-
 const $ = (s, ctx=document) => ctx.querySelector(s);
 const $$ = (s, ctx=document) => [...ctx.querySelectorAll(s)];
 const view = $("#view");
 const bottomNav = $("#bottomNav");
+const sideMenu = $("#sideMenu");
+const overlay = $("#overlay");
 
 /* ----------------- Data ----------------- */
 const ROLES = {
@@ -467,49 +608,230 @@ const ROLES = {
 };
 
 const SEED_USERS = [
-  { email:"maria@demo.com",     pass:"1234", name:"María Pérez",      role:"ciudadano", district:"Jesús María", points:1250, level:"Héroe Nivel 5", plan:null },
-  { email:"juan@demo.com",      pass:"1234", name:"Juan López",       role:"adoptante", district:"Miraflores",  points:420,  level:"Aliado Nivel 2", plan:null },
-  { email:"albergue@demo.com",  pass:"1234", name:"Albergue Patitas Felices", role:"albergue", district:"San Isidro", points:5680, level:"Rescatista Nivel 4", plan:"premium" },
+  { email:"maria@demo.com",     pass:"1234", name:"María Pérez",                 role:"ciudadano", district:"Jesús María", points:1250, level:"Héroe Nivel 5",      plan:null },
+  { email:"juan@demo.com",      pass:"1234", name:"Juan López",                  role:"adoptante", district:"Miraflores",  points:420,  level:"Aliado Nivel 2",     plan:null },
+  { email:"albergue@demo.com",  pass:"1234", name:"Albergue Patitas Felices",    role:"albergue",  district:"San Isidro",  points:5680, level:"Rescatista Nivel 4", plan:"premium" },
 ];
 
-const STATE_KEY = "pawshot_state_v1";
+const STATE_KEY = "pawshot_state_v2";
 
 function loadState(){
   try{
     const raw = localStorage.getItem(STATE_KEY);
     if(raw) return JSON.parse(raw);
   }catch(e){}
-  return {
-    users: SEED_USERS.slice(),
-    session: null,
-    currentTab: "map",
-    history: [],
-    flow: {},
-  };
+  return { users: SEED_USERS.slice(), session: null, currentTab: "map", history: [], flow: {} };
 }
 function saveState(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
-
 let state = loadState();
 
-/* perros del mapa */
-const DOGS = [
-  { id:1, name:"Max",  district:"Jesús María", status:"Reportado",    age:"Adulto",   sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕",     desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true, publishedBy:"Albergue Patitas Felices" },
-  { id:2, name:"Luna", district:"Miraflores",  status:"En adopción",  age:"2 años",   sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", desc:"Luna es una perrita cariñosa, juguetona y muy noble. Se lleva bien con personas y otros perros.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Rescatista temporal" },
-  { id:3, name:"Rocky",district:"Barranco",    status:"En seguimiento",age:"1 año",   sex:"Macho",  size:"Pequeño", health:["Herido"],     img:"🐶", desc:"Estaba cerca del puente de los suspiros, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Barranco", caseId:"#3258", verified:false, publishedBy:"Ciudadano" },
-  { id:4, name:"Coco", district:"Jesús María", status:"En adopción",  age:"3 años",   sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
+let DOGS = [
+  { id:1, name:"Max",  district:"Jesús María", status:"Reportado",     age:"Adulto", sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕",       desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true,  publishedBy:"Albergue Patitas Felices" },
+  { id:2, name:"Luna", district:"Miraflores",  status:"En adopción",   age:"2 años", sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", desc:"Luna es una perrita cariñosa, juguetona y muy noble. Se lleva bien con personas y otros perros.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Rescatista temporal" },
+  { id:3, name:"Rocky",district:"Barranco",    status:"En seguimiento",age:"1 año",  sex:"Macho",  size:"Pequeño", health:["Herido"], img:"🐶", desc:"Estaba cerca del puente de los suspiros, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Barranco", caseId:"#3258", verified:false, publishedBy:"Ciudadano" },
+  { id:4, name:"Coco", district:"Jesús María", status:"En adopción",   age:"3 años", sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
 ];
 
-/* notificaciones */
 const NOTIF = [
   { ic:"📜", cls:"g", t:"Nuevo certificado disponible — Albergue Patitas Felices te certifica como Voluntario Bronce.", ts:"Hace 5 min", dot:true },
-  { ic:"✅", cls:"g", t:"Evidencia verificada — Tu foto de Luna fue aprobada y aparece en el mapa. +20 pts.", ts:"Hace 18 min", dot:false },
-  { ic:"📍", cls:"b", t:"Nuevo caso reportado cerca de tu área.", ts:"Hace 1 hora", dot:false },
+  { ic:"☣️", cls:"y", t:"Alerta de rabia: perro con espuma en Parque Las Malvinas. Mantén distancia.", ts:"Hace 15 min", dot:true },
+  { ic:"✅", cls:"g", t:"Evidencia verificada — Tu foto de Luna fue aprobada. +20 pts.", ts:"Hace 18 min", dot:false },
+  { ic:"📍", cls:"b", t:"Nuevo caso reportado cerca de tu área (Av. Brasil).", ts:"Hace 1 hora", dot:false },
   { ic:"❤️", cls:"r", t:"Tu solicitud de adopción por Max fue aceptada.", ts:"Hace 2 horas", dot:false },
-  { ic:"🏆", cls:"y", t:"Tienes 150 PawPoints disponibles para canjear.", ts:"Hace 1 día", dot:false },
-  { ic:"🐶", cls:"g", t:"Luna fue publicada en adopción por Albergue Esperanza.", ts:"Hace 2 días", dot:false },
+  { ic:"🏆", cls:"y", t:"Tienes 150 PawPoints para canjear en VetCare San Isidro.", ts:"Hace 1 día", dot:false },
 ];
 
-/* ----------------- Toast ----------------- */
+let HAZARDS = [
+  { sev:"crit", ic:"☣️", t:"Sospecha de rabia · perro con espuma", loc:"Parque Las Malvinas, Cercado",    ago:"hace 2 horas", reports:8,  confirmed:14 },
+  { sev:"crit", ic:"☠️", t:"Veneno colocado contra perros",        loc:"Av. Petit Thouars cdra. 18, Lince", ago:"hace 3 horas", reports:5,  confirmed:9 },
+  { sev:"crit", ic:"🐕‍🦺",t:"Jauría agresiva de perros sueltos",   loc:"Cerro San Cosme, La Victoria",    ago:"hace 1 hora",  reports:11, confirmed:18 },
+  { sev:"med",  ic:"🦠", t:"Foco de moquillo / parvovirus",         loc:"Refugio temporal Jr. Bolívar",    ago:"hace 1 día",   reports:6,  confirmed:8 },
+  { sev:"med",  ic:"🐶", t:"Perros con sarna visible",              loc:"Mercado Magdalena del Mar",       ago:"hace 6 horas", reports:4,  confirmed:7 },
+  { sev:"med",  ic:"🚗", t:"Atropellos frecuentes a perros",        loc:"Av. Brasil cdra. 25, Jesús María",ago:"hace 5 horas", reports:12, confirmed:23 },
+  { sev:"med",  ic:"🚛", t:"Vehículo de captura ilegal",            loc:"Av. Tomás Marsano, Surco",        ago:"hace 4 horas", reports:5,  confirmed:9 },
+  { sev:"info", ic:"🐾", t:"Cachorros abandonados (camada nueva)",  loc:"Parque Reducto, Miraflores",      ago:"hace 2 horas", reports:3,  confirmed:5 },
+  { sev:"info", ic:"🤰", t:"Perra preñada sin hogar",               loc:"Av. Salaverry cdra. 12, J.M.",    ago:"hace 8 horas", reports:2,  confirmed:3 },
+];
+
+const TIPS = {
+  seguridad: [
+    { kind:"danger", ic:"☠️", t:"Perro con espuma en la boca", body:"Posible rabia. <b>No te acerques</b> bajo ninguna circunstancia. Llama a Serenazgo (105) o al SISESAT (sanidad animal). Mantén una distancia mínima de 10 metros y aleja a otras personas y mascotas." },
+    { kind:"warn",   ic:"⚠️", t:"Perro gruñendo o mostrando dientes", body:"Está asustado o defendiéndose. <b>No corras y no le des la espalda</b>. Retrocede lentamente, evita el contacto visual directo, y dale espacio. La mayoría no atacará si no se siente amenazado." },
+    { kind:"info",   ic:"🐕", t:"Cómo acercarte correctamente", body:"Acércate por el costado, no de frente. Agáchate al nivel del perro sin mirarlo directo a los ojos. Extiende el dorso de tu mano cerrada para que te huela. Si menea la cola y relaja las orejas, puedes acariciarlo en el pecho (no la cabeza)." },
+    { kind:"danger", ic:"🩸", t:"Perro herido", body:"<b>El dolor puede hacer que muerda incluso a personas amables.</b> Usa una manta o toalla para cargarlo si es necesario. Llama a una veterinaria cercana antes de moverlo. Reporta el caso en PawShot para que un albergue lo tome." },
+    { kind:"warn",   ic:"🌡️", t:"Señales de deshidratación o golpe de calor", body:"Encías secas/pálidas, jadeo excesivo, letargo. Ofrécele agua fresca en pequeñas cantidades y llévalo a la sombra. Nunca le des agua muy fría de golpe." },
+  ],
+  adopcion: [
+    { kind:"good", ic:"🐾", t:"Adopta a un perro adulto", body:"Los perros adultos suelen ser más tranquilos, ya tienen su personalidad definida y muchos están educados. <b>Son ideales para departamentos y primeras adopciones.</b> Además, suelen ser los que más tardan en encontrar hogar." },
+    { kind:"good", ic:"💪", t:"Los mestizos son más sanos", body:"Tienen <b>mejor sistema inmunológico</b> y menos enfermedades genéticas que las razas puras. Adoptar un mestizo significa salvar una vida y tener un compañero resistente y leal." },
+    { kind:"info", ic:"💰", t:"¿Cuánto cuesta mantener un perro?", body:"Presupuesto mensual realista en Lima: <b>S/. 150-300</b> (alimento, vet anual, accesorios, baños). Una adopción responsable empieza por entender que es un compromiso de 10-15 años." },
+    { kind:"tip",  ic:"🏠", t:"Regla 3-3-3 de adopción", body:"<b>3 días:</b> el perro está abrumado, no come bien, se esconde. Dale espacio.<br/><b>3 semanas:</b> empieza a explorar, prueba límites, muestra personalidad.<br/><b>3 meses:</b> ya está completamente adaptado y confía plenamente en ti." },
+    { kind:"tip",  ic:"✂️", t:"Esteriliza siempre", body:"Evita embarazos no deseados, reduce el riesgo de cáncer y enfermedades, y mejora el comportamiento. Hay campañas gratuitas — busca veterinarias aliadas en PawShot." },
+    { kind:"good", ic:"📋", t:"Antes de adoptar: checklist", body:"☐ ¿Tienes tiempo (mín. 2h diarias)?<br/>☐ ¿Vives en lugar pet-friendly?<br/>☐ ¿Toda la familia está de acuerdo?<br/>☐ ¿Presupuesto mensual disponible?<br/>☐ ¿Plan para vacaciones/emergencias?" },
+    { kind:"info", ic:"🩺", t:"Primera semana en casa", body:"Llévalo al veterinario en los primeros 7 días para chequeo general, desparasitación y plan de vacunas. Mantén su rutina simple: misma comida, mismos horarios, mismo lugar de descanso." },
+    { kind:"tip",  ic:"🐶", t:"Socialízalo desde el día 1", body:"Llévalo a parques, exponlo a otras personas y perros gradualmente. Un perro bien socializado es más feliz y reduce conductas problemáticas." },
+  ],
+};
+
+const VETS = [
+  { name:"VetCare San Isidro",        type:"Clínica veterinaria",  area:"San Isidro",   disc:"15% en consultas + chequeo gratis", pts:100, ic:"🏥" },
+  { name:"Pet Spa Pueblo Libre",      type:"Estética canina",      area:"Pueblo Libre", disc:"Baño y corte gratis (1ra vez)",     pts:150, ic:"🛁" },
+  { name:"Clínica Animaliada",        type:"Clínica veterinaria",  area:"Miraflores",   disc:"20% en esterilización",             pts:250, ic:"🏥" },
+  { name:"Lab Animales Sano",         type:"Laboratorio",          area:"Jesús María",  disc:"30% en análisis sanguíneos",        pts:120, ic:"🧪" },
+  { name:"PetShop Patitas",           type:"Pet shop aliado",      area:"Barranco",     disc:"10% en alimento premium",           pts:80,  ic:"🛒" },
+  { name:"Clínica Veterinaria 24/7",  type:"Emergencias",          area:"Surquillo",    disc:"S/. 30 dcto. en consulta urgente",  pts:200, ic:"🚑" },
+];
+
+/* =====================================================================
+   🔥 FIREBASE — Base de datos compartida
+   ---------------------------------------------------------------------
+   PASOS PARA ACTIVAR (4 min):
+   1) Ve a https://console.firebase.google.com → "Agregar proyecto" → ponle "pawshot"
+      → Continuar (puedes desactivar Google Analytics) → Crear proyecto
+   2) En el menú izquierdo: Build → Realtime Database → "Crear base de datos"
+      → ubicación "us-central1" → "Iniciar en modo de prueba" (test mode) → Listo
+   3) Arriba ve a la rueda ⚙️ → "Configuración del proyecto" → baja a "Tus apps"
+      → clic en el icono Web </> → ponle nombre "pawshot-web" → Registrar app
+   4) Te muestra el objeto firebaseConfig — cópialo y pégalo aquí abajo
+      reemplazando todos los valores del objeto FIREBASE_CONFIG.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBOVn_5AVYsUYflm6b_TBi9Ecc_yMjXW2g",
+  authDomain:        "pawshot-3327d.firebaseapp.com",
+  databaseURL:       "https://pawshot-3327d-default-rtdb.firebaseio.com",
+  projectId:         "pawshot-3327d",
+  storageBucket:     "pawshot-3327d.firebasestorage.app",
+  messagingSenderId: "69495862186",
+  appId:             "1:69495862186:web:f5c31470b92bdef86431d3"
+};
+
+let fbDB = null, fbReady = false;
+function initFirebase(){
+  try{
+    if(!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.includes("PEGA_AQUI")){
+      console.warn("⚠️ Firebase no configurado — la app usa almacenamiento local del navegador.");
+      return false;
+    }
+    if(typeof firebase === "undefined"){
+      console.warn("⚠️ Firebase SDK no cargó (¿sin internet?).");
+      return false;
+    }
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbDB = firebase.database();
+    fbReady = true;
+    console.log("✅ Firebase conectado");
+    return true;
+  }catch(e){ console.error("Firebase init error:", e); return false; }
+}
+
+const emailKey = (e) => e.toLowerCase().replace(/[.$#\[\]\/]/g, "_");
+
+/* ---- Store (Firebase con fallback a localStorage) ---- */
+const store = {
+  async findUser(email){
+    if(fbReady){
+      const snap = await fbDB.ref("users/" + emailKey(email)).once("value");
+      return snap.val();
+    }
+    return state.users.find(u => u.email === email.toLowerCase()) || null;
+  },
+  async createUser(user){
+    user.email = user.email.toLowerCase();
+    user.createdAt = Date.now();
+    if(fbReady){
+      await fbDB.ref("users/" + emailKey(user.email)).set(user);
+    }
+    if(!state.users.find(u=>u.email===user.email)) state.users.push(user);
+    saveState();
+    return user;
+  },
+  async updateUser(email, patch){
+    if(fbReady){
+      await fbDB.ref("users/" + emailKey(email)).update(patch);
+    }
+    const u = state.users.find(u=>u.email===email);
+    if(u) Object.assign(u, patch);
+    saveState();
+  },
+  async addDog(dog){
+    dog.createdAt = Date.now();
+    if(fbReady){
+      const ref = fbDB.ref("dogs").push();
+      dog.id = ref.key;
+      await ref.set(dog);
+    } else {
+      dog.id = "d" + Date.now();
+      DOGS.unshift(dog);
+    }
+    return dog;
+  },
+  async addHazard(h){
+    h.createdAt = Date.now();
+    if(fbReady){
+      const ref = fbDB.ref("hazards").push();
+      h.id = ref.key;
+      await ref.set(h);
+    } else {
+      h.id = "h" + Date.now();
+      HAZARDS.unshift(h);
+    }
+    return h;
+  },
+  async confirmHazard(id){
+    if(fbReady){
+      const ref = fbDB.ref("hazards/" + id + "/confirmed");
+      await ref.transaction(v => (v || 0) + 1);
+    } else {
+      const h = HAZARDS.find(x=>x.id===id);
+      if(h) h.confirmed = (h.confirmed||0) + 1;
+    }
+  },
+};
+
+/* ---- Seed DB if empty (primera vez) ---- */
+async function seedIfEmpty(){
+  if(!fbReady) return;
+  const usersSnap = await fbDB.ref("users").once("value");
+  if(!usersSnap.exists()){
+    console.log("🌱 Sembrando usuarios demo...");
+    for(const u of SEED_USERS){
+      await fbDB.ref("users/" + emailKey(u.email)).set({...u, createdAt: Date.now()});
+    }
+  }
+  const dogsSnap = await fbDB.ref("dogs").once("value");
+  if(!dogsSnap.exists()){
+    for(const d of DOGS){
+      const ref = fbDB.ref("dogs").push();
+      await ref.set({...d, id: ref.key, createdAt: Date.now()});
+    }
+  }
+  const hzSnap = await fbDB.ref("hazards").once("value");
+  if(!hzSnap.exists()){
+    for(const h of HAZARDS){
+      const ref = fbDB.ref("hazards").push();
+      await ref.set({...h, id: ref.key, createdAt: Date.now()});
+    }
+  }
+}
+
+/* ---- Live sync de DOGS y HAZARDS ---- */
+function setupLiveSync(){
+  if(!fbReady) return;
+  fbDB.ref("dogs").on("value", snap => {
+    const v = snap.val();
+    if(v) DOGS = Object.values(v).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+    const cur = state.current?.screen;
+    if(cur === "map" || cur === "dogDetail") renderScreen(cur, state.current.params || {});
+  });
+  fbDB.ref("hazards").on("value", snap => {
+    const v = snap.val();
+    if(v) HAZARDS = Object.values(v).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+    const cur = state.current?.screen;
+    if(cur === "map" || cur === "hazards") renderScreen(cur, state.current.params || {});
+  });
+}
+
+/* ----------------- Toast & navigation ----------------- */
 function toast(msg){
   const t = $("#toast");
   t.textContent = msg;
@@ -518,11 +840,58 @@ function toast(msg){
   window.__toastT = setTimeout(()=>t.classList.remove("show"), 1600);
 }
 
-/* ----------------- Router ----------------- */
+/* ----------------- File uploader ----------------- */
+function attachUploader(selector, opts={}){
+  const el = typeof selector === "string" ? $(selector) : selector;
+  if(!el) return null;
+  const { multiple=true, max=5, accept="image/*,video/*", placeholder="<span class='ic'>📷</span>Toca para agregar fotos" } = opts;
+  let files = [];
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = accept; input.multiple = multiple;
+  input.style.display = "none";
+  el.appendChild(input);
+  const render = () => {
+    if(files.length === 0){
+      el.classList.remove("has-files");
+      el.innerHTML = placeholder;
+      el.appendChild(input);
+      return;
+    }
+    el.classList.add("has-files");
+    el.innerHTML = files.map((f,i)=>{
+      const isVid = f.type && f.type.startsWith("video");
+      return `<div class="preview">${isVid?`<video src="${f.data}" muted></video>`:`<img src="${f.data}" alt=""/>`}<button class="rm" data-i="${i}" type="button">×</button></div>`;
+    }).join("") + (files.length < max ? `<div class="add-more" data-add="1">+</div>` : "");
+    el.appendChild(input);
+    $$(".rm", el).forEach(b => b.onclick = (e)=>{
+      e.stopPropagation();
+      files.splice(+b.dataset.i, 1);
+      render();
+    });
+    const add = $("[data-add]", el);
+    if(add) add.onclick = (e)=>{ e.stopPropagation(); input.click(); };
+  };
+  el.addEventListener("click", e => {
+    if(e.target.closest(".rm") || e.target.closest("[data-add]")) return;
+    input.click();
+  });
+  input.addEventListener("change", ()=>{
+    const slots = Math.max(0, max - files.length);
+    const list = [...input.files].slice(0, slots);
+    Promise.all(list.map(f => new Promise(r => {
+      const reader = new FileReader();
+      reader.onload = e => r({ name: f.name, type: f.type, data: e.target.result });
+      reader.readAsDataURL(f);
+    }))).then(r => { files.push(...r); render(); input.value = ""; });
+  });
+  render();
+  return { getFiles: ()=> files, clear: ()=>{ files = []; render(); } };
+}
 function go(screen, params={}, push=true){
   if(push) state.history.push({screen, params});
   state.current = {screen, params};
   saveState();
+  closeSideMenu();
   renderScreen(screen, params);
 }
 function back(){
@@ -533,26 +902,23 @@ function back(){
     saveState();
     renderScreen(prev.screen, prev.params || {});
   } else {
-    go("splash");
+    go(state.session ? "map" : "login");
   }
 }
 function logout(){
   state.session = null;
   state.history = [];
   saveState();
-  go("splash");
+  go("login");
 }
-function currentUser(){
-  return state.session ? state.users.find(u=>u.email===state.session) : null;
-}
+function currentUser(){ return state.session ? state.users.find(u=>u.email===state.session) : null; }
 function updateUser(patch){
   const u = currentUser();
   if(!u) return;
   Object.assign(u, patch);
   saveState();
+  if(fbReady) fbDB.ref("users/" + emailKey(u.email)).update(patch).catch(()=>{});
 }
-
-/* ----------------- Screens ----------------- */
 
 function showNav(tab){
   bottomNav.classList.remove("hidden");
@@ -561,25 +927,58 @@ function showNav(tab){
 function hideNav(){ bottomNav.classList.add("hidden"); }
 
 bottomNav.addEventListener("click", e=>{
-  const b = e.target.closest("button");
-  if(!b) return;
+  const b = e.target.closest("button"); if(!b) return;
   const tab = b.dataset.tab;
-  state.currentTab = tab;
-  saveState();
+  state.currentTab = tab; saveState();
   if(tab === "map") go("map");
+  if(tab === "tips") go("tips");
   if(tab === "activity") go("activity");
   if(tab === "points") go("points");
-  if(tab === "notif") go("notif");
   if(tab === "profile") go("profile");
 });
 
+/* ----------------- Side menu ----------------- */
+function openSideMenu(){
+  const u = currentUser(); if(!u) return;
+  sideMenu.innerHTML = `
+    <div class="top">
+      <div class="avatar">${ROLES[u.role].icon}</div>
+      <div class="name">${u.name}</div>
+      <div class="role">${ROLES[u.role].label}</div>
+    </div>
+    <div class="items">
+      <button data-go="map"><span class="ic">🗺️</span>Mapa</button>
+      <button data-go="tips"><span class="ic">💡</span>Consejos para rescatistas</button>
+      <button data-go="hazards"><span class="ic">⚠️</span>Peligros en la zona</button>
+      <button data-go="reportHazard"><span class="ic">🚨</span>Reportar peligro</button>
+      <div class="sep"></div>
+      <button data-go="activity"><span class="ic">📂</span>Mi actividad</button>
+      <button data-go="points"><span class="ic">🏆</span>Mis PawPoints</button>
+      <button data-go="vetDiscounts"><span class="ic">🏥</span>Descuentos en veterinarias</button>
+      <button data-go="notif"><span class="ic">🔔</span>Notificaciones</button>
+      <div class="sep"></div>
+      <button data-go="profile"><span class="ic">👤</span>Mi perfil</button>
+      <button data-go="settings"><span class="ic">⚙️</span>Configuración</button>
+      <button data-act="logout"><span class="ic">↩</span>Cerrar sesión</button>
+    </div>`;
+  sideMenu.classList.add("open");
+  overlay.classList.add("open");
+  $$("[data-go]", sideMenu).forEach(b => b.onclick = ()=> go(b.dataset.go));
+  $("[data-act]", sideMenu).onclick = logout;
+}
+function closeSideMenu(){
+  sideMenu.classList.remove("open");
+  overlay.classList.remove("open");
+}
+overlay.addEventListener("click", closeSideMenu);
+
+/* ----------------- Router ----------------- */
 function renderScreen(screen, params={}){
   switch(screen){
-    case "splash":        return scrSplash();
+    case "login":         return scrLogin();
     case "role":          return scrRole();
     case "register":      return scrRegister();
     case "plan":          return scrPlan();
-    case "login":         return scrLogin();
     case "map":           return scrMap();
     case "filters":       return scrFilters();
     case "report":        return scrReport();
@@ -588,83 +987,127 @@ function renderScreen(screen, params={}){
     case "publish1":      return scrPublish(1);
     case "publish2":      return scrPublish(2);
     case "publish3":      return scrPublish(3);
-    case "adoptionProf":  return scrAdoptionProfile(params);
-    case "adoptionFilt":  return scrAdoptionFilters();
     case "adoptionReq":   return scrAdoptionRequest(params);
     case "chat":          return scrChat(params);
     case "activity":      return scrActivity();
     case "evidence":      return scrEvidence();
     case "points":        return scrPoints();
     case "certifs":       return scrCertifs();
-    case "benefits":      return scrBenefits();
+    case "vetDiscounts":  return scrVetDiscounts();
     case "analytics":     return scrAnalytics();
     case "notif":         return scrNotif();
     case "profile":       return scrProfile();
     case "settings":      return scrSettings();
+    case "tips":          return scrTips();
+    case "tipsList":      return scrTipsList(params);
+    case "hazards":       return scrHazards();
+    case "reportHazard":  return scrReportHazard();
+    default:              return scrLogin();
   }
 }
 
-/* ============= 1. Splash ============= */
-function scrSplash(){
+/* ============= Login (entry) ============= */
+function scrLogin(){
   hideNav();
-  view.classList.add("dark");
+  view.classList.remove("dark");
   view.innerHTML = `
-    <div class="splash">
-      <div></div>
-      <div>
+    <div class="login-bg">
+      <div class="login-top">
         <div class="logo">🐾</div>
         <h1>PawShot</h1>
         <div class="tag">Captura. Rescata. Adopta.</div>
-        <div class="sub">Una foto puede cambiar la vida de un perro.</div>
       </div>
-      <div style="width:100%">
-        <button class="btn" id="goStart">Empezar</button>
-        <div class="dots"><span class="on"></span><span></span><span></span></div>
-        <div class="switch" style="color:#bdbdbd;margin-top:16px">¿Ya tienes cuenta? <b style="color:#fff;cursor:pointer" id="toLogin">Inicia sesión</b></div>
+      <div class="login-card">
+        <h3>Empieza rápido</h3>
+        <div class="muted">Entra con una cuenta de ejemplo o usa la tuya.</div>
+        <div class="demo-user" data-email="maria@demo.com">
+          <div class="av">🧑</div>
+          <div class="info"><div class="name">María Pérez · Ciudadana</div><div class="role">Reporta perros · Jesús María</div></div>
+          <div class="go">›</div>
+        </div>
+        <div class="demo-user" data-email="juan@demo.com">
+          <div class="av">❤️</div>
+          <div class="info"><div class="name">Juan López · Adoptante</div><div class="role">Busca compañero · Miraflores</div></div>
+          <div class="go">›</div>
+        </div>
+        <div class="demo-user" data-email="albergue@demo.com">
+          <div class="av">🤝</div>
+          <div class="info"><div class="name">Albergue Patitas Felices</div><div class="role">Organización aliada · San Isidro</div></div>
+          <div class="go">›</div>
+        </div>
+
+        <div class="divider">o usa tu propia cuenta</div>
+
+        <div class="label" style="margin-top:0">Correo</div>
+        <input class="input" id="lEmail" type="email" placeholder="tu@correo.com"/>
+        <div class="label">Contraseña</div>
+        <input class="input" id="lPass" type="password" placeholder="••••••••"/>
+        <div class="mt12"></div>
+        <button class="btn" id="doLogin">Entrar</button>
+        <div class="center" style="margin-top:10px;font-size:12.5px;color:var(--muted)">
+          ¿Sin cuenta? <b style="color:#111;cursor:pointer" id="toReg">Regístrate</b>
+        </div>
       </div>
     </div>`;
-  $("#goStart").onclick = () => go("role");
-  $("#toLogin").onclick = () => go("login");
+  $$(".demo-user", view).forEach(d => d.onclick = async ()=>{
+    const email = d.dataset.email;
+    let u = await store.findUser(email);
+    if(!u){
+      const seed = SEED_USERS.find(x=>x.email===email);
+      if(seed) u = await store.createUser({...seed});
+    }
+    if(!u){ toast("Cuenta no encontrada"); return; }
+    if(!state.users.find(x=>x.email===u.email)) state.users.push(u);
+    state.session = u.email;
+    state.history = [];
+    state.currentTab = "map";
+    saveState();
+    toast(`Hola ${u.name.split(" ")[0]} 🐾`);
+    go("map");
+  });
+  $("#toReg").onclick = ()=> go("role");
+  $("#doLogin").onclick = async ()=>{
+    const email = $("#lEmail").value.trim().toLowerCase();
+    const pass  = $("#lPass").value;
+    if(!email || !pass){ toast("Completa correo y contraseña"); return; }
+    const u = await store.findUser(email);
+    if(!u || u.pass !== pass){ toast("Credenciales inválidas"); return; }
+    if(!state.users.find(x=>x.email===u.email)) state.users.push(u);
+    state.session = u.email;
+    state.history = [];
+    state.currentTab = "map";
+    saveState();
+    toast(`Hola ${u.name.split(" ")[0]} 🐾`);
+    go("map");
+  };
 }
 
-/* ============= 2. Role selection ============= */
+/* ============= Role selection ============= */
 function scrRole(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   const cards = Object.entries(ROLES).map(([k,r])=>`
-    <div class="role-card" data-role="${k}">
-      <div class="ic">${r.icon}</div>
-      <div class="body">
-        <p class="t">${r.label}</p>
-        <p class="s">${r.desc}</p>
-      </div>
-      <div class="arrow">›</div>
+    <div class="card" data-role="${k}" style="margin-bottom:10px;cursor:pointer">
+      <div class="avatar">${r.icon}</div>
+      <div class="meta"><p class="t">${r.label}</p><p class="s">${r.desc}</p></div>
+      <span style="color:#bbb">›</span>
     </div>`).join("");
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> ¿Cómo deseas participar?</div></div>
-    <div class="pad">
-      <p class="sub">Tú defines cómo usarás PawShot.</p>
-      ${cards}
-    </div>`;
-  $("#b").onclick = back;
-  $$(".role-card", view).forEach(c=>{
-    c.onclick = ()=>{
-      state.flow.role = c.dataset.role;
-      saveState();
-      go("register");
-    };
+    <div class="pad"><p class="sub">Tú defines cómo usarás PawShot.</p>${cards}</div>`;
+  $("#b").onclick = ()=> go("login");
+  $$("[data-role]", view).forEach(c=>c.onclick = ()=>{
+    state.flow.role = c.dataset.role; saveState(); go("register");
   });
 }
 
-/* ============= 3. Register ============= */
+/* ============= Register ============= */
 function scrRegister(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   const isOrg = state.flow.role === "albergue";
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Crear cuenta</div></div>
     <div class="pad">
-      <p class="sub">Ejemplo: ${isOrg ? "Albergue / Pet Shop" : "Adoptante"}</p>
+      <p class="sub">${isOrg ? "Albergue / Pet Shop / Veterinaria" : "Cuenta personal"}</p>
       <div class="label">Nombre completo</div>
       <input class="input" id="rName" placeholder="${isOrg?'Albergue Esperanza':'María Pérez'}"/>
       <div class="label">Correo electrónico</div>
@@ -675,32 +1118,25 @@ function scrRegister(){
       <select class="select" id="rDistrict">
         <option>Jesús María</option><option>Miraflores</option><option>Barranco</option>
         <option>San Isidro</option><option>Surco</option><option>San Borja</option>
+        <option>Pueblo Libre</option><option>Lince</option><option>Surquillo</option>
       </select>
       <div class="mt16"></div>
       <button class="btn" id="next">${isOrg?"Continuar":"Crear cuenta"}</button>
-      <div class="divider">o continúa con</div>
-      <div class="social">
-        <button title="Google">G</button>
-        <button title="Facebook">f</button>
-        <button title="Apple"></button>
-      </div>
-      <div class="switch">¿Ya tienes cuenta? <b id="toLogin">Inicia sesión</b></div>
     </div>`;
   $("#b").onclick = back;
-  $("#toLogin").onclick = ()=>go("login");
-  $("#next").onclick = ()=>{
+  $("#next").onclick = async ()=>{
     const email = $("#rEmail").value.trim().toLowerCase();
     const pass  = $("#rPass").value;
     const name  = $("#rName").value.trim();
     if(!email || !pass || !name){ toast("Completa todos los campos"); return; }
-    if(state.users.find(u=>u.email===email)){ toast("Ese correo ya está registrado"); return; }
+    const existing = await store.findUser(email);
+    if(existing){ toast("Ese correo ya está registrado"); return; }
     state.flow.draft = { email, pass, name, district:$("#rDistrict").value, role: state.flow.role || "ciudadano" };
     saveState();
-    if(isOrg) go("plan");
-    else finishRegister();
+    if(isOrg) go("plan"); else finishRegister();
   };
 }
-function finishRegister(plan=null){
+async function finishRegister(plan=null){
   const d = state.flow.draft;
   const u = {
     email:d.email, pass:d.pass, name:d.name, district:d.district, role:d.role,
@@ -708,7 +1144,7 @@ function finishRegister(plan=null){
     level: d.role==="albergue" ? "Rescatista Nivel 1" : "Aliado Nivel 1",
     plan,
   };
-  state.users.push(u);
+  await store.createUser(u);
   state.session = u.email;
   state.flow = {};
   state.currentTab = "map";
@@ -718,21 +1154,16 @@ function finishRegister(plan=null){
   go("map");
 }
 
-/* ============= 3B. Plan selection (B2B) ============= */
+/* ============= Plan ============= */
 function scrPlan(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Elige tu plan</div></div>
     <div class="pad">
       <p class="sub">Potencia tu organización y ayuda a más perros cada día.</p>
       <div class="plan-card" data-plan="basico">
         <div class="head"><div class="t">Plan Básico</div><div class="price" style="color:#888">Gratis</div></div>
-        <ul>
-          <li>Funciones limitadas en el mapa</li>
-          <li>1 cupón promocional al mes</li>
-          <li>Soporte por correo</li>
-        </ul>
+        <ul><li>Funciones limitadas en el mapa</li><li>1 cupón promocional al mes</li><li>Soporte por correo</li></ul>
       </div>
       <div class="plan-card selected" data-plan="premium">
         <div class="head"><div class="t">Plan Premium Active</div><div class="price">S/. 49/mes</div></div>
@@ -757,89 +1188,98 @@ function scrPlan(){
   $("#next").onclick = ()=> finishRegister(selected);
 }
 
-/* ============= Login ============= */
-function scrLogin(){
-  hideNav();
-  view.classList.remove("dark");
-  view.innerHTML = `
-    <div class="auth">
-      <div class="logo-mini">🐾</div>
-      <h2>Inicia sesión</h2>
-      <p class="intro">Continúa cambiando vidas, una foto a la vez.</p>
-      <div class="label">Correo electrónico</div>
-      <input class="input" id="lEmail" type="email" placeholder="tu@correo.com"/>
-      <div class="label">Contraseña</div>
-      <input class="input" id="lPass" type="password" placeholder="••••••••"/>
-      <div class="mt16"></div>
-      <button class="btn" id="doLogin">Entrar</button>
-      <div class="divider">o continúa con</div>
-      <div class="social">
-        <button>G</button><button>f</button><button></button>
-      </div>
-      <div class="switch">¿Sin cuenta? <b id="toReg">Regístrate</b></div>
-      <div class="small center mt16">Cuentas demo: maria@demo.com · juan@demo.com · albergue@demo.com (pass <b>1234</b>)</div>
-    </div>`;
-  $("#toReg").onclick = ()=>go("role");
-  $("#doLogin").onclick = ()=>{
-    const email = $("#lEmail").value.trim().toLowerCase();
-    const pass  = $("#lPass").value;
-    const u = state.users.find(u=>u.email===email && u.pass===pass);
-    if(!u){ toast("Credenciales inválidas"); return; }
-    state.session = u.email;
-    state.history = [];
-    state.currentTab = "map";
-    saveState();
-    toast(`Hola ${u.name.split(" ")[0]} 🐾`);
-    go("map");
-  };
-}
-
-/* ============= 4. Map ============= */
+/* ============= Map ============= */
 function scrMap(){
-  if(!currentUser()) return go("splash");
-  showNav("map");
-  view.classList.remove("dark");
+  if(!currentUser()) return go("login");
+  showNav("map"); view.classList.remove("dark");
   const role = currentUser().role;
-  const fabIcon = role==="ciudadano" ? "➕" : role==="adoptante" ? "📤" : "🐕";
-  const fabTitle = role==="ciudadano" ? "Reportar perro" : role==="adoptante" ? "Subir Evidencia" : "Publicar perro";
+  const fabIcon = role==="ciudadano" ? "📷" : role==="adoptante" ? "📸" : "🐕";
+  const fabTitle = role==="ciudadano" ? "Reportar" : role==="adoptante" ? "Evidencia" : "Publicar";
 
   view.innerHTML = `
     <div class="top-app-bar">
-      <div class="left"><button class="back" id="menu" style="font-size:22px">☰</button> Mapa</div>
+      <div class="left"><button class="back" id="menu" style="font-size:22px">☰</button> Mapa · Jesús María</div>
       <div class="right"><button class="icon-btn" id="notifBtn">🔔</button></div>
     </div>
     <div class="map">
+      <div class="map-canvas" id="mapCanvas">
+        <div class="map-inner" id="mapInner">
+          <!-- Parques (área verde) -->
+          <div class="park" style="left:60px;top:90px;width:200px;height:130px"></div>
+          <div class="park-label" style="left:120px;top:145px">Parque Reducto</div>
+          <div class="park" style="left:520px;top:380px;width:180px;height:170px"></div>
+          <div class="park-label" style="left:560px;top:455px">Campo de Marte</div>
+          <div class="park" style="left:340px;top:50px;width:130px;height:90px"></div>
+          <div class="park-label" style="left:370px;top:88px">Pq. Castilla</div>
+
+          <!-- Avenidas (calles blancas) -->
+          <div class="street" style="left:0;top:260px;right:0;height:18px"></div>
+          <div class="street" style="left:0;top:460px;right:0;height:14px"></div>
+          <div class="street" style="left:0;top:120px;right:0;height:10px"></div>
+          <div class="street" style="left:280px;top:0;width:18px;bottom:0"></div>
+          <div class="street" style="left:560px;top:0;width:14px;bottom:0"></div>
+          <div class="street" style="left:110px;top:0;width:10px;bottom:0"></div>
+
+          <!-- Nombres de calles -->
+          <div class="street-name" style="left:14px;top:248px">Av. Brasil</div>
+          <div class="street-name" style="left:14px;top:108px">Av. Sucre</div>
+          <div class="street-name" style="left:14px;top:448px">Av. Salaverry</div>
+          <div class="street-name" style="left:260px;top:8px;writing-mode:vertical-rl">Jr. Lima</div>
+          <div class="street-name" style="left:540px;top:8px;writing-mode:vertical-rl">Av. Petit Thouars</div>
+
+          <!-- Pins de perros -->
+          <div class="pin r" data-dog="1" style="left:180px;top:300px"><span class="label">Max · Reportado</span>🐕</div>
+          <div class="pin g" data-dog="3" style="left:400px;top:400px"><span class="label">Rocky · Seguimiento</span>🐾</div>
+          <div class="pin b" data-dog="2" style="left:620px;top:240px"><span class="label">Luna · Adopción</span>❤️</div>
+          <div class="pin b" data-dog="4" style="left:340px;top:170px"><span class="label">Coco · Adopción</span>❤️</div>
+
+          <!-- Pins de peligros (relacionados a perros) -->
+          <div class="pin hazard crit" data-hazard="0" style="left:140px;top:170px"><span class="label">☣️ Rabia · espuma</span>☣️</div>
+          <div class="pin hazard crit" data-hazard="2" style="left:480px;top:540px"><span class="label">🐕‍🦺 Jauría agresiva</span>🐕‍🦺</div>
+          <div class="pin hazard"      data-hazard="4" style="left:230px;top:520px"><span class="label">🐶 Sarna visible</span>🐶</div>
+          <div class="pin hazard"      data-hazard="3" style="left:580px;top:120px"><span class="label">🦠 Moquillo</span>🦠</div>
+          <div class="pin hazard"      data-hazard="7" style="left:120px;top:430px"><span class="label">🐾 Cachorros</span>🐾</div>
+
+          <!-- Aliados comerciales -->
+          <div class="pin shop" data-vet="0" style="left:80px;top:380px"><span class="label">🏥 VetCare · 15%</span>🏥</div>
+          <div class="pin shop" data-vet="0" style="left:680px;top:340px"><span class="label">🛁 Pet Spa</span>🛁</div>
+        </div>
+      </div>
+
       <div class="map-toolbar">
-        <div class="search">🔍 Buscar en el mapa...</div>
+        <div class="search">🔍 Buscar dirección o perro...</div>
         <button class="ibtn" id="filtBtn">⚙️</button>
       </div>
       <div class="map-chips">
-        <span class="chip dot-r">🔴 Reportado</span>
-        <span class="chip dot-g">🟢 En seguimiento</span>
-        <span class="chip">En adopción</span>
+        <span class="chip active">Todo</span>
+        <span class="chip dot-r">🔴 Reportados</span>
+        <span class="chip dot-g">🟢 Seguimiento</span>
+        <span class="chip dot-b">❤️ Adopción</span>
+        <span class="chip dot-y">⚠️ Peligros</span>
       </div>
-      <div class="street" style="left:8%;top:30%;right:8%;height:8px"></div>
-      <div class="street" style="left:8%;top:60%;right:8%;height:8px"></div>
-      <div class="street" style="left:35%;top:18%;width:8px;bottom:8%"></div>
-      <div class="street" style="left:70%;top:18%;width:8px;bottom:8%"></div>
-
-      <div class="pin r" style="left:22%;top:40%"><span class="label">Reportado</span>🐕</div>
-      <div class="pin g" style="left:58%;top:55%"><span>🐾</span></div>
-      <div class="pin b" style="left:78%;top:35%"><span>❤️</span></div>
-      <div class="pin shop" style="left:42%;top:72%"><span class="label">🏪 Pet Shop Patitas — ¡Muestras gratis!</span>🏪</div>
-
-      <button class="fab" id="fab" title="${fabTitle}">${fabIcon}</button>
+      <div class="district-label">📍 Jesús María · arrastra el mapa</div>
+      <button class="map-recenter" id="recenter" title="Centrar">🎯</button>
+      <button class="fab" id="fab">${fabIcon}</button>
+      <div class="fab-label">${fabTitle}</div>
     </div>
+
     <div class="map-legend">
-      <span><span class="d" style="background:#e3b35b"></span>Reportado</span>
-      <span><span class="d" style="background:#2fa56a"></span>En seguimiento</span>
-      <span><span class="d" style="background:#3777e3"></span>En adopción</span>
-      <span><span class="d" style="background:#7c4dff"></span>Comercial</span>
+      <span><span class="d" style="background:#a52a1d"></span>Reportado</span>
+      <span><span class="d" style="background:#147346"></span>Seguimiento</span>
+      <span><span class="d" style="background:#1d4a8c"></span>Adopción</span>
+      <span><span class="d" style="background:#f08a3e"></span>Peligro</span>
+      <span><span class="d" style="background:#7c4dff"></span>Aliado</span>
     </div>
-    <div class="pad">
-      <h3 class="section" style="margin-top:0">Cerca de ti</h3>
+
+    <div class="quick-actions">
+      <div class="qa tips" id="qaTips"><div class="ic">💡</div><div><p class="t">Consejos</p><p class="s">Antes de acercarte</p></div></div>
+      <div class="qa hazards" id="qaHaz"><div class="ic">⚠️</div><div><p class="t">Peligros</p><p class="s">${HAZARDS.length} alertas activas</p></div></div>
+    </div>
+
+    <div class="pad" style="padding-top:8px">
+      <h3 class="section" style="margin-top:8px">Cerca de ti</h3>
       ${DOGS.slice(0,3).map(d=>`
-        <div class="card mt8" data-id="${d.id}">
+        <div class="card mt8" data-id="${d.id}" style="cursor:pointer">
           <div class="avatar">${d.img}</div>
           <div class="meta">
             <p class="t">${d.name} · <span class="small">${d.district}</span></p>
@@ -848,11 +1288,72 @@ function scrMap(){
           <span class="badge ${d.status==='Reportado'?'no':d.status==='En adopción'?'info':'warn'}">${d.status}</span>
         </div>`).join("")}
     </div>`;
-  $("#menu").onclick = ()=>go("profile");
-  $("#notifBtn").onclick = ()=>go("notif");
-  $("#filtBtn").onclick = ()=>go("filters");
-  $$(".pin", view).forEach(p=>p.onclick = ()=>go("dogDetail",{id:1}));
+
+  $("#menu").onclick = openSideMenu;
+  $("#notifBtn").onclick = ()=> go("notif");
+  $("#filtBtn").onclick = ()=> go("filters");
+  $("#qaTips").onclick = ()=> go("tips");
+  $("#qaHaz").onclick = ()=> go("hazards");
+
+  /* ---- Map drag (Waze-style pan) ---- */
+  const canvas = $("#mapCanvas");
+  const inner  = $("#mapInner");
+  let dragState = { down:false, moved:false, startX:0, startY:0, x:0, y:0 };
+  const center = ()=>{
+    const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+    const iw = inner.offsetWidth,  ih = inner.offsetHeight;
+    dragState.x = (cw - iw) / 2;
+    dragState.y = (ch - ih) / 2;
+    inner.style.transform = `translate(${dragState.x}px,${dragState.y}px)`;
+  };
+  const clamp = (v, min, max)=> Math.max(min, Math.min(max, v));
+  const apply = (nx, ny)=>{
+    const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+    const iw = inner.offsetWidth,  ih = inner.offsetHeight;
+    nx = clamp(nx, cw - iw, 0);
+    ny = clamp(ny, ch - ih, 0);
+    dragState.x = nx; dragState.y = ny;
+    inner.style.transform = `translate(${nx}px,${ny}px)`;
+  };
+  const ptr = (e)=> e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+  const onDown = (e)=>{
+    const p = ptr(e);
+    dragState.down = true; dragState.moved = false;
+    dragState.startX = p.clientX - dragState.x;
+    dragState.startY = p.clientY - dragState.y;
+    canvas.classList.add("grabbing");
+  };
+  const onMove = (e)=>{
+    if(!dragState.down) return;
+    e.preventDefault();
+    const p = ptr(e);
+    const nx = p.clientX - dragState.startX;
+    const ny = p.clientY - dragState.startY;
+    if(Math.abs(nx - dragState.x) > 3 || Math.abs(ny - dragState.y) > 3) dragState.moved = true;
+    apply(nx, ny);
+  };
+  const onUp = ()=>{ dragState.down = false; canvas.classList.remove("grabbing"); };
+  canvas.addEventListener("mousedown",  onDown);
+  window.addEventListener("mousemove",  onMove);
+  window.addEventListener("mouseup",    onUp);
+  canvas.addEventListener("touchstart", onDown, {passive:true});
+  canvas.addEventListener("touchmove",  onMove, {passive:false});
+  canvas.addEventListener("touchend",   onUp);
+  requestAnimationFrame(center);
+  $("#recenter").onclick = center;
+
+  /* Pin handlers (ignoran clicks tras arrastrar) */
+  const safeClick = (cb)=> (e)=>{ if(dragState.moved) return; cb(e); };
+  $$("[data-dog]", view).forEach(p=> p.addEventListener("click", safeClick(()=> go("dogDetail",{id:+p.dataset.dog}))));
+  $$("[data-hazard]", view).forEach(p=> p.addEventListener("click", safeClick(()=> go("hazards"))));
+  $$("[data-vet]", view).forEach(p=> p.addEventListener("click", safeClick(()=> go("vetDiscounts"))));
+
   $$(".card[data-id]", view).forEach(c=>c.onclick=()=>go("dogDetail",{id:+c.dataset.id}));
+  $$(".map-chips .chip", view).forEach(c => c.onclick = ()=>{
+    $$(".map-chips .chip", view).forEach(x=>x.classList.remove("active"));
+    c.classList.add("active");
+    toast("Filtro aplicado: " + c.textContent.trim());
+  });
   $("#fab").onclick = ()=>{
     if(role==="ciudadano") go("report");
     else if(role==="adoptante") go("evidence");
@@ -860,10 +1361,9 @@ function scrMap(){
   };
 }
 
-/* ============= 5. Filters ============= */
+/* ============= Filters ============= */
 function scrFilters(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
     <div class="top-app-bar">
       <div class="left"><button class="back" id="b">←</button> Filtros</div>
@@ -899,19 +1399,19 @@ function scrFilters(){
   $("#apply").onclick = ()=>{ toast("Filtros aplicados"); back(); };
 }
 
-/* ============= 6. Report dog ============= */
+/* ============= Report dog (ciudadano) ============= */
 function scrReport(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Reportar perro</div></div>
     <div class="pad">
-      <div class="upload"><span class="ic">📷</span>Tomar foto</div>
+      <div class="upload" id="reportUp"><span class="ic">📷</span>Toca para tomar/subir foto</div>
+
       <h3 class="section">Ubicación (GPS)</h3>
       <div class="card"><div class="avatar">📍</div><div class="meta"><p class="t">Av. Brasil, Jesús María</p><p class="s">Detectada automáticamente</p></div></div>
 
       <h3 class="section">Estado del perro</h3>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="health">
         <span class="chip">Saludable</span>
         <span class="chip">Herido</span>
         <span class="chip">Desnutrido</span>
@@ -925,34 +1425,58 @@ function scrReport(){
       <button class="btn" id="pub">Publicar reporte</button>
     </div>`;
   $("#b").onclick = back;
-  $$(".chip", view).forEach(c=>c.onclick = e=>{ $$(".chip", view).forEach(x=>x.classList.remove("active")); c.classList.add("active");});
-  $("#pub").onclick = ()=>{
+  const up = attachUploader("#reportUp", { max:3, placeholder:"<span class='ic'>📷</span>Toca para tomar/subir foto" });
+  $$("#health .chip", view).forEach(c=>c.onclick = ()=>{
+    $$("#health .chip", view).forEach(x=>x.classList.remove("active"));
+    c.classList.add("active");
+  });
+  $("#pub").onclick = async ()=>{
+    if(up.getFiles().length===0){ toast("Agrega al menos una foto"); return; }
+    const u = currentUser();
+    const desc = $(".textarea", view).value || "Reporte ciudadano";
+    const healthChip = $("#health .chip.active", view)?.textContent.trim() || "Urgente";
+    await store.addDog({
+      name: "Caso nuevo",
+      district: u.district,
+      status: "Reportado",
+      age: "Desconocido", sex: "?", size: "?",
+      health: [healthChip],
+      img: "🐕",
+      desc, reportedAt: "ahora",
+      location: u.district + " · GPS ciudadano",
+      caseId: "#" + Math.floor(3000+Math.random()*999),
+      verified: false,
+      publishedBy: u.name,
+      photo: up.getFiles()[0]?.data || null,
+    });
+    updateUser({points: u.points + 20});
     toast("Reporte publicado · +20 PawPoints");
-    const u = currentUser(); updateUser({points: u.points + 20});
     go("map");
   };
 }
 
-/* ============= 7. Dog detail ============= */
+/* ============= Dog detail ============= */
 function scrDogDetail({id}){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   const d = DOGS.find(x=>x.id===id) || DOGS[0];
   const role = currentUser().role;
+  let primary = "", secondary = "";
+  if(role==="albergue"){ primary="Tomar caso"; secondary="Compartir"; }
+  else if(role==="adoptante" && d.status==="En adopción"){ primary="Solicitar adopción"; secondary="Contactar"; }
+  else { primary="Ayudar (Misiones)"; secondary="Compartir"; }
+
   view.innerHTML = `
     <div class="dog-hero">
-      <div class="nav">
-        <button id="b">←</button>
-        <button id="fav">♡</button>
-      </div>
+      <div class="nav"><button id="b">←</button><button id="fav">♡</button></div>
       <span>${d.img}</span>
     </div>
     <div class="pad">
       <h2 class="title">${d.name}</h2>
       <p class="sub">📍 ${d.location}<br/>Reportado ${d.reportedAt}</p>
-      <div style="display:flex;gap:6px;margin:8px 0">
+      <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap">
         <span class="badge ${d.status==='Reportado'?'no':'info'}">Estado: ${d.status}</span>
         ${d.verified?'<span class="badge ok">✓ Verificado</span>':''}
+        ${d.health.map(h=>`<span class="badge warn">${h}</span>`).join("")}
       </div>
       <p style="font-size:13.5px;line-height:1.55;color:#333">${d.desc}</p>
     </div>
@@ -964,38 +1488,33 @@ function scrDogDetail({id}){
     </div>
     <div class="pad">
       <div class="row">
-        ${role==="albergue"
-          ? `<button class="btn ghost" id="share">Compartir</button><button class="btn" id="action">Tomar caso</button>`
-          : role==="adoptante" && d.status==="En adopción"
-            ? `<button class="btn ghost" id="contact">Contactar</button><button class="btn" id="action">Solicitar adopción</button>`
-            : `<button class="btn ghost" id="share">Compartir</button><button class="btn" id="action">Ayudar (Misiones)</button>`}
+        <button class="btn ghost" id="sec">${secondary}</button>
+        <button class="btn" id="prim">${primary}</button>
       </div>
     </div>`;
   $("#b").onclick = back;
   $("#fav").onclick = e=> { e.target.textContent = e.target.textContent==="♡"?"♥":"♡"; toast("Guardado en favoritos"); };
-  $("#share")?.addEventListener("click", ()=>toast("Caso compartido"));
-  $("#contact")?.addEventListener("click", ()=>go("chat",{name:d.publishedBy, dog:d.name}));
-  $("#action").onclick = ()=>{
-    if(role==="albergue") go("takeCase",{id:d.id});
-    else if(role==="adoptante" && d.status==="En adopción") go("adoptionReq",{id:d.id});
+  $("#sec").onclick = ()=>{
+    if(secondary==="Contactar") go("chat",{name:d.publishedBy, dog:d.name});
+    else toast("Caso compartido");
+  };
+  $("#prim").onclick = ()=>{
+    if(primary==="Tomar caso") go("takeCase",{id:d.id});
+    else if(primary==="Solicitar adopción") go("adoptionReq",{id:d.id});
     else { toast("¡Gracias! Misión asignada · +10 pts"); const u=currentUser(); updateUser({points:u.points+10}); back(); }
   };
 }
 
-/* ============= 8. Take case (shelter) ============= */
+/* ============= Take case ============= */
 function scrTakeCase({id}){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   const d = DOGS.find(x=>x.id===id) || DOGS[0];
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Caso ${d.caseId}</div></div>
     <div class="pad">
       <div class="card">
         <div class="avatar">${d.img}</div>
-        <div class="meta">
-          <p class="t">${d.name}</p>
-          <p class="s">${d.location} · ${d.status} ${d.reportedAt}</p>
-        </div>
+        <div class="meta"><p class="t">${d.name}</p><p class="s">${d.location} · ${d.status}</p></div>
       </div>
       <div style="background:#f7f5f2;border-radius:14px;padding:14px;margin-top:14px;font-size:13px;line-height:1.5;color:#444">
         ⓘ Al tomar este caso, otros albergues sabrán que ya estás ayudando a ${d.name}.
@@ -1013,10 +1532,9 @@ function scrTakeCase({id}){
   };
 }
 
-/* ============= 9-10. Publish dog (3 steps) ============= */
+/* ============= Publish ============= */
 function scrPublish(step){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   const stepBar = `
     <div class="stepbar">
       <div class="step ${step>=1?'on':''}">1</div>
@@ -1029,7 +1547,7 @@ function scrPublish(step){
   if(step===1){
     body = `
       <div class="label">Información del perro</div>
-      <div class="upload"><span class="ic">📷</span>Agregar fotos (máx. 5)</div>
+      <div class="upload" id="pubUp"><span class="ic">📷</span>Agregar fotos (máx. 5)</div>
       <div class="label">Nombre</div>
       <input class="input" placeholder="Ej. Max"/>
       <div class="row mt8">
@@ -1053,27 +1571,21 @@ function scrPublish(step){
       <div class="label">Descripción</div>
       <textarea class="textarea" placeholder="Max es un perrito cariñoso... (0/200)" maxlength="200"></textarea>
       <div class="row mt8">
-        <div><div class="label mt0">Publicado por</div>
-          <select class="select"><option>Albergue</option><option>Rescatista temporal</option></select>
-        </div>
-        <div><div class="label mt0">Distrito</div>
-          <select class="select"><option>Jesús María</option><option>Miraflores</option><option>San Isidro</option></select>
-        </div>
+        <div><div class="label mt0">Publicado por</div><select class="select"><option>Albergue</option><option>Rescatista temporal</option></select></div>
+        <div><div class="label mt0">Distrito</div><select class="select"><option>Jesús María</option><option>Miraflores</option><option>San Isidro</option></select></div>
       </div>
       <div class="mt16"></div>
       <button class="btn" id="next">Siguiente</button>`;
   } else {
     body = `
       <div class="card"><div class="avatar">🐕</div><div class="meta">
-        <p class="t">Max <span class="badge ok">✓ Verificado por Albergue</span></p>
+        <p class="t">Max <span class="badge ok">✓ Verificado</span></p>
         <p class="s">Macho · 2 años · Mediano</p>
       </div></div>
       <h3 class="section">Resumen</h3>
       <p class="sub">Max es un perro cariñoso, juguetón y muy noble. Se lleva bien con personas y otros perros.</p>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <span class="chip">Saludable</span>
-        <span class="chip">Vacunado</span>
-        <span class="chip">No esterilizado</span>
+        <span class="chip">Saludable</span><span class="chip">Vacunado</span><span class="chip">No esterilizado</span>
       </div>
       <div class="label mt16">Confirmación</div>
       <div class="filter-row"><input type="checkbox" checked id="ack"/><label for="ack">Confirmo que toda la información es verídica.</label></div>
@@ -1082,89 +1594,39 @@ function scrPublish(step){
   }
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Publicar en adopción</div></div>
-    <div class="pad">
-      <p class="sub">Paso ${step} de 3</p>
-      ${stepBar}
-      ${body}
-    </div>`;
+    <div class="pad"><p class="sub">Paso ${step} de 3</p>${stepBar}${body}</div>`;
   $("#b").onclick = back;
-  $("#next").onclick = ()=>{
+  if(step===1) attachUploader("#pubUp", { max:5, placeholder:"<span class='ic'>📷</span>Agregar fotos (máx. 5)" });
+  $("#next").onclick = async ()=>{
     if(step<3) go("publish"+(step+1));
-    else { toast("Publicación exitosa · Max está en adopción 🐶"); go("activity"); }
+    else {
+      const u = currentUser();
+      await store.addDog({
+        name: "Nuevo perro " + Math.floor(Math.random()*900+100),
+        district: u.district,
+        status: "En adopción",
+        age: "2 años", sex: "Macho", size: "Mediano",
+        health: ["Saludable","Vacunado"],
+        img: ["🐕","🐩","🐶","🐕‍🦺"][Math.floor(Math.random()*4)],
+        desc: "Publicado por " + u.name,
+        reportedAt: "recién publicado",
+        location: u.district,
+        caseId: "#" + Math.floor(3000+Math.random()*999),
+        verified: u.role === "albergue",
+        publishedBy: u.name,
+      });
+      toast("Publicación exitosa · El perro está en adopción 🐶");
+      go("activity");
+    }
   };
 }
 
-/* ============= 11. Adoption profile (adopter) ============= */
-function scrAdoptionProfile({id}){
-  hideNav();
-  view.classList.remove("dark");
-  const d = DOGS.find(x=>x.id===id) || DOGS.find(x=>x.status==="En adopción");
-  view.innerHTML = `
-    <div class="dog-hero">
-      <div class="nav"><button id="b">←</button><button id="fav">♡</button></div>
-      <span>${d.img}</span>
-      <div class="dots" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px">
-        <span style="width:6px;height:6px;border-radius:50%;background:#111"></span>
-        <span style="width:6px;height:6px;border-radius:50%;background:#ccc"></span>
-        <span style="width:6px;height:6px;border-radius:50%;background:#ccc"></span>
-      </div>
-    </div>
-    <div class="pad">
-      <div class="between">
-        <h2 class="title mb0">${d.name}</h2>
-        <span class="badge ok">✓ Verificado por Albergue</span>
-      </div>
-      <p class="sub">${d.sex} · ${d.age} · ${d.size}</p>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${d.health.map(h=>`<span class="chip">${h}</span>`).join("")}
-        <span class="chip">No esterilizado</span>
-      </div>
-      <h3 class="section">Sobre ${d.name}</h3>
-      <p class="sub">${d.desc}<br/>Publicado por <b>${d.publishedBy}</b> · ${d.district}</p>
-      <div class="row mt16">
-        <button class="btn ghost" id="contact">Contactar</button>
-        <button class="btn" id="req">Solicitar adopción</button>
-      </div>
-    </div>`;
-  $("#b").onclick = back;
-  $("#contact").onclick = ()=>go("chat",{name:d.publishedBy, dog:d.name});
-  $("#req").onclick = ()=>go("adoptionReq",{id:d.id});
-  $("#fav").onclick = e=>{ e.target.textContent = e.target.textContent==="♡"?"♥":"♡"; };
-}
-
-/* ============= 12. Adoption filters ============= */
-function scrAdoptionFilters(){
-  hideNav();
-  view.classList.remove("dark");
-  view.innerHTML = `
-    <div class="top-app-bar">
-      <div class="left"><button class="back" id="b">←</button> Filtros de adopción</div>
-      <div class="right"><button class="icon-btn" id="rst">Restablecer</button></div>
-    </div>
-    <div class="pad">
-      <div class="label">Edad</div><select class="select"><option>Todos</option><option>Cachorro</option><option>Adulto</option></select>
-      <div class="label">Sexo</div><select class="select"><option>Todos</option><option>Macho</option><option>Hembra</option></select>
-      <div class="label">Tamaño</div><select class="select"><option>Todos</option><option>Pequeño</option><option>Mediano</option><option>Grande</option></select>
-      <div class="label">Raza</div><select class="select"><option>Todos</option><option>Mestizo</option><option>Labrador</option></select>
-      <h3 class="section">Publicado por</h3>
-      <div class="filter-row"><input type="checkbox" id="a1" checked/><label for="a1">Albergues</label></div>
-      <div class="filter-row"><input type="checkbox" id="a2"/><label for="a2">Rescatistas temporales</label></div>
-      <div class="label">Distrito</div><select class="select"><option>Todos los distritos</option></select>
-      <div class="mt16"></div>
-      <button class="btn" id="apply">Aplicar filtros</button>
-    </div>`;
-  $("#b").onclick = back;
-  $("#rst").onclick = ()=>toast("Filtros restablecidos");
-  $("#apply").onclick = ()=>{ toast("Filtros aplicados"); back(); };
-}
-
-/* ============= 13. Adoption request ============= */
+/* ============= Adoption request ============= */
 function scrAdoptionRequest({id}){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   const d = DOGS.find(x=>x.id===id) || DOGS[0];
   view.innerHTML = `
-    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Solicitar adopción · ${d.name}</div></div>
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Solicitar · ${d.name}</div></div>
     <div class="pad">
       <h3 class="section">Cuéntanos sobre ti</h3>
       <div class="label">¿Tienes experiencia con mascotas?</div>
@@ -1182,25 +1644,25 @@ function scrAdoptionRequest({id}){
   $("#send").onclick = ()=>{ toast("Solicitud enviada al albergue ✅"); go("activity"); };
 }
 
-/* ============= 14. Chat ============= */
-function scrChat({name="Albergue Esperanza", dog="Max"}={}){
-  hideNav();
-  view.classList.remove("dark");
+/* ============= Chat ============= */
+function scrChat({name="Albergue Patitas Felices", dog="Max"}={}){
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
     <div class="top-app-bar">
       <div class="left">
         <button class="back" id="b">←</button>
-        <div class="avatar" style="width:36px;height:36px;border-radius:50%;background:#f1efeb;display:flex;align-items:center;justify-content:center;font-size:16px">🏠</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:#f1efeb;display:flex;align-items:center;justify-content:center;font-size:16px">🏠</div>
         <div><div style="font-size:14px">${name}</div><div class="small">En línea</div></div>
       </div>
       <div class="right"><button class="icon-btn">⋮</button></div>
     </div>
-    <div class="chat-context">Hola María, hemos recibido tu solicitud por ${dog}.</div>
+    <div class="chat-context">Hola, hemos recibido tu solicitud por ${dog}.</div>
     <div class="chat-msgs" id="msgs">
       <div class="bubble in">Hola, claro, gracias por contactarnos.<span class="ts">10:32 a.m.</span></div>
-      <div class="bubble in">Hola, claro, gracias por conocernos.<span class="ts">10:32 a.m.</span></div>
-      <div class="bubble out">Con gusto, ¿podemos agendar una visita?<span class="ts">10:33 a.m.</span></div>
-      <div class="bubble in">Sí, te envío los detalles.<span class="ts">10:34 a.m.</span></div>
+      <div class="bubble out">¡Hola! Sí, me interesa mucho ${dog}.<span class="ts">10:33 a.m.</span></div>
+      <div class="bubble in">Con gusto, ¿podemos agendar una visita?<span class="ts">10:33 a.m.</span></div>
+      <div class="bubble out">Sí, ¿qué día les queda mejor?<span class="ts">10:34 a.m.</span></div>
+      <div class="bubble in">¿El sábado a las 10am? Te envío los detalles.<span class="ts">10:34 a.m.</span></div>
     </div>
     <div class="chat-bar">
       <input id="msg" placeholder="Escribe un mensaje..."/>
@@ -1208,8 +1670,7 @@ function scrChat({name="Albergue Esperanza", dog="Max"}={}){
     </div>`;
   $("#b").onclick = back;
   const send = ()=>{
-    const v = $("#msg").value.trim();
-    if(!v) return;
+    const v = $("#msg").value.trim(); if(!v) return;
     const m = document.createElement("div");
     m.className = "bubble out";
     m.innerHTML = `${v}<span class="ts">ahora</span>`;
@@ -1228,11 +1689,10 @@ function scrChat({name="Albergue Esperanza", dog="Max"}={}){
   $("#msg").addEventListener("keydown", e=> { if(e.key==="Enter") send(); });
 }
 
-/* ============= 15/17. Activity ============= */
+/* ============= Activity ============= */
 function scrActivity(){
-  if(!currentUser()) return go("splash");
-  showNav("activity");
-  view.classList.remove("dark");
+  if(!currentUser()) return go("login");
+  showNav("activity"); view.classList.remove("dark");
   const role = currentUser().role;
   const tabs = role==="albergue"
     ? [["cases","Casos"],["sols","Solicitudes"],["pub","Publicados"]]
@@ -1243,59 +1703,58 @@ function scrActivity(){
   if(role==="albergue"){
     if(tab==="cases"){
       list = `
-        <div class="act-card"><div class="ph">🐕</div><div class="info"><p class="t">Perro herido · San Isidro</p><p class="s">Reporte ciudadano · 1h</p></div><span class="badge new">Nuevo</span></div>
-        <div class="act-card"><div class="ph">👤</div><div class="info"><p class="t">Juan Pérez solicita a Luna</p><p class="s">Ver perfil adoptante</p></div><span class="badge warn">Revisar</span></div>
-        <div class="act-card"><div class="ph">🐶</div><div class="info"><p class="t">Max publicado</p><p class="s">Disponible adopción</p></div><span class="badge ok">Activo</span></div>`;
+        <div class="act-card"><div class="ph">🐕</div><div class="info"><p class="t">Perro herido · San Isidro</p><p class="s">Reporte ciudadano · hace 1h</p></div><span class="badge new">Nuevo</span></div>
+        <div class="act-card"><div class="ph">🐩</div><div class="info"><p class="t">Caso Luna · seguimiento</p><p class="s">Ya tomado · hace 2 días</p></div><span class="badge ok">Activo</span></div>
+        <div class="act-card"><div class="ph">🐶</div><div class="info"><p class="t">Caso Max · publicado</p><p class="s">Disponible adopción</p></div><span class="badge info">Listo</span></div>`;
     } else if(tab==="sols"){
-      list = DOGS.slice(0,3).map((d,i)=>`
+      list = ["María López","Carlos Ruiz","Ana Torres"].map((n,i)=>`
         <div class="act-card">
           <div class="ph">👤</div>
-          <div class="info"><p class="t">${["María López","Carlos Ruiz","Ana Torres"][i]} → ${d.name}</p><p class="s">Solicitud recibida hace ${i+1}h</p></div>
+          <div class="info"><p class="t">${n} → ${DOGS[i].name}</p><p class="s">Recibida hace ${i+1}h</p></div>
           <div class="actions"><button class="btn ghost small">Rechazar</button><button class="btn small">Aceptar</button></div>
         </div>`).join("");
     } else {
       list = DOGS.filter(d=>d.status==="En adopción").map(d=>`
-        <div class="act-card"><div class="ph">${d.img}</div><div class="info"><p class="t">${d.name}</p><p class="s">Publicado · ${d.district}</p></div><span class="badge ok">Activo</span></div>`).join("");
+        <div class="act-card"><div class="ph">${d.img}</div><div class="info"><p class="t">${d.name}</p><p class="s">${d.district}</p></div><span class="badge ok">Activo</span></div>`).join("");
     }
   } else {
     if(tab==="sols"){
       list = `
-        <div class="act-card"><div class="ph">🐕</div><div class="info"><p class="t">Max · Albergue Esperanza</p><p class="s">15 May 2024</p></div><span class="badge warn">En revisión</span></div>
-        <div class="act-card"><div class="ph">🐩</div><div class="info"><p class="t">Luna · Albergue Esperanza</p><p class="s">12 May 2024</p></div><span class="badge ok">Aceptada</span></div>
-        <div class="act-card"><div class="ph">🐶</div><div class="info"><p class="t">Rocky · Albergue Patitas</p><p class="s">10 May 2024</p></div><span class="badge no">Rechazada</span></div>`;
+        <div class="act-card"><div class="ph">🐕</div><div class="info"><p class="t">Max · Albergue Patitas</p><p class="s">15 May</p></div><span class="badge warn">En revisión</span></div>
+        <div class="act-card"><div class="ph">🐩</div><div class="info"><p class="t">Luna · Albergue Esperanza</p><p class="s">12 May</p></div><span class="badge ok">Aceptada</span></div>
+        <div class="act-card"><div class="ph">🐶</div><div class="info"><p class="t">Rocky · Albergue Patitas</p><p class="s">10 May</p></div><span class="badge no">Rechazada</span></div>`;
     } else if(tab==="adop"){
       list = `
         <div class="act-card"><div class="ph">🐩</div><div class="info"><p class="t">Luna</p><p class="s">Adoptada hace 2 meses</p></div><button class="btn small" id="ev">Subir evidencia</button></div>`;
     } else {
       list = `
-        <div class="act-card" id="openChat"><div class="ph">🏠</div><div class="info"><p class="t">Albergue Esperanza</p><p class="s">¡Perfecto! Te esperamos el sábado.</p></div><span class="badge info">3</span></div>`;
+        <div class="act-card" id="openChat"><div class="ph">🏠</div><div class="info"><p class="t">Albergue Patitas Felices</p><p class="s">¡Perfecto! Te esperamos el sábado.</p></div><span class="badge info">3</span></div>
+        <div class="act-card" id="openChat2"><div class="ph">🏠</div><div class="info"><p class="t">Albergue Esperanza</p><p class="s">Gracias por tu interés en Luna.</p></div></div>`;
     }
   }
   view.innerHTML = `
     <div class="top-app-bar"><div class="left">Actividad</div></div>
     <div class="pad">
-      <div class="tabs">
-        ${tabs.map(([k,n])=>`<button class="${k===tab?'active':''}" data-t="${k}">${n}</button>`).join("")}
-      </div>
+      <div class="tabs">${tabs.map(([k,n])=>`<button class="${k===tab?'active':''}" data-t="${k}">${n}</button>`).join("")}</div>
       ${list || '<p class="sub">Sin elementos.</p>'}
     </div>`;
   $$("[data-t]", view).forEach(b=>b.onclick = ()=>{ state.flow.actTab = b.dataset.t; saveState(); scrActivity(); });
   $("#ev")?.addEventListener("click",()=>go("evidence"));
   $("#openChat")?.addEventListener("click",()=>go("chat",{}));
+  $("#openChat2")?.addEventListener("click",()=>go("chat",{name:"Albergue Esperanza", dog:"Luna"}));
 }
 
-/* ============= 16. Evidence ============= */
+/* ============= Evidence ============= */
 function scrEvidence(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Evidencia de Bienestar</div></div>
     <div class="pad">
       <p class="sub">Post-adopción · <b>Luna</b></p>
-      <div class="upload"><span class="ic">📷</span>Subir Foto o Video de Luna<br/><span class="small">Máx. 5 archivos · JPG o MP4</span></div>
+      <div class="upload" id="evUp"><span class="ic">📷</span>Subir Foto o Video<br/><span class="small">Máx. 5 archivos · JPG o MP4</span></div>
 
       <h3 class="section">Estado actual</h3>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="ch">
         <span class="chip active">Jugando</span>
         <span class="chip">Alimentada</span>
         <span class="chip">En Veterinaria</span>
@@ -1304,32 +1763,32 @@ function scrEvidence(){
       <h3 class="section">Descripción</h3>
       <textarea class="textarea" placeholder="Describe brevemente la actualización de hoy..."></textarea>
       <div style="background:#defaee;color:#147346;padding:10px 12px;border-radius:12px;font-size:12.5px;margin-top:10px">
-        🟢 Aparecerá en el mapa: Jesús María · +20 PawPoints
+        🟢 Aparecerá en el mapa · +20 PawPoints
       </div>
       <div class="mt16"></div>
       <button class="btn" id="send">Enviar actualización al Albergue</button>
     </div>`;
   $("#b").onclick = back;
-  $$(".chip", view).forEach(c=>c.onclick = ()=>{ $$(".chip", view).forEach(x=>x.classList.remove("active")); c.classList.add("active");});
+  attachUploader("#evUp", { max:5, placeholder:"<span class='ic'>📷</span>Subir Foto o Video<br/><span class='small'>Máx. 5 archivos · JPG o MP4</span>" });
+  $$("#ch .chip", view).forEach(c=>c.onclick = ()=>{ $$("#ch .chip", view).forEach(x=>x.classList.remove("active")); c.classList.add("active");});
   $("#send").onclick = ()=>{ const u=currentUser(); updateUser({points:u.points+20}); toast("Actualización enviada · +20 pts"); back(); };
 }
 
-/* ============= 18 & 20. PawPoints ============= */
+/* ============= PawPoints ============= */
 function scrPoints(){
-  if(!currentUser()) return go("splash");
-  showNav("points");
-  view.classList.remove("dark");
+  if(!currentUser()) return go("login");
+  showNav("points"); view.classList.remove("dark");
   const u = currentUser();
   const isOrg = u.role==="albergue";
   view.innerHTML = `
     <div class="top-app-bar">
       <div class="left">${isOrg?"Puntos institucionales":"PawPoints"}</div>
-      <div class="right"><button class="icon-btn" id="bf">🎁</button></div>
+      <div class="right"><button class="icon-btn" id="bf">🏥</button></div>
     </div>
     <div class="points-hero">
       <div class="num">${u.points.toLocaleString()}</div>
       <div class="lvl">${u.level||"Aliado Nivel 1"}</div>
-      <div style="font-size:11.5px;color:#bdbdbd;margin-top:4px">${isOrg?"+42 ofertas activas":"Faltan 750 pts para el siguiente nivel"}</div>
+      <div style="font-size:11.5px;color:#bdbdbd;margin-top:4px">${isOrg?"Acumulados por la organización":"Faltan 750 pts para el siguiente nivel"}</div>
     </div>
     <div class="pad">
       ${!isOrg?`
@@ -1339,29 +1798,29 @@ function scrPoints(){
           <div style="flex:1"><div class="t">¡Duplica tus puntos!</div><div class="s">PawShot Pro · S/. 9.90/mes</div></div>
           <button>Activar</button>
         </div>
-        <button class="btn ghost mt12" id="recharge">💎 Recargar PawPoints</button>
-        <button class="btn dark mt12" id="cert">📜 Ver mis Certificados de Voluntariado</button>
+        <button class="btn mt12" id="vet">🏥 Canjear en veterinarias aliadas</button>
+        <button class="btn ghost mt8" id="cert">📜 Mis Certificados de Voluntariado</button>
+        <button class="btn ghost mt8" id="recharge">💎 Recargar PawPoints</button>
       `:`
         <h3 class="section">Cómo acumulamos puntos</h3>
         <div class="row-link"><div class="lt"><div class="ic">🐕</div>Casos tomados</div><div class="rt"><b>+2,150 pts</b></div></div>
         <div class="row-link"><div class="lt"><div class="ic">❤️</div>Adopciones concretadas</div><div class="rt"><b>+2,400 pts</b></div></div>
         <div class="row-link"><div class="lt"><div class="ic">📸</div>Actualización de perros</div><div class="rt"><b>+380 pts</b></div></div>
         <div class="row-link"><div class="lt"><div class="ic">📜</div>Certificados emitidos</div><div class="rt"><b>+750 pts</b></div></div>
-        <button class="btn mt16" id="bf2">Canjear beneficios</button>
+        <button class="btn mt16" id="vet">🏥 Canjear en veterinarias aliadas</button>
         <button class="btn ghost mt8" id="an">📊 Ver métricas de negocio</button>
       `}
     </div>`;
-  $("#bf")?.addEventListener("click",()=>go("benefits"));
-  $("#bf2")?.addEventListener("click",()=>go("benefits"));
+  $("#bf")?.addEventListener("click",()=>go("vetDiscounts"));
+  $("#vet")?.addEventListener("click",()=>go("vetDiscounts"));
   $("#recharge")?.addEventListener("click",()=>toast("Pasarela de recarga · demo"));
   $("#cert")?.addEventListener("click",()=>go("certifs"));
   $("#an")?.addEventListener("click",()=>go("analytics"));
 }
 
-/* ============= 19. Certificates ============= */
+/* ============= Certificates ============= */
 function scrCertifs(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Mis Certificaciones</div></div>
     <div class="pad">
@@ -1372,13 +1831,13 @@ function scrCertifs(){
         <button class="btn" id="pdf">📥 Descargar PDF para CV</button>
       </div>
       <div class="cert silver">
-        <div class="head"><span>🥈 NIVEL PLATA</span><span class="badge lock">🔒 Bloqueado</span></div>
+        <div class="head"><span>🥈 NIVEL PLATA</span><span class="lock">🔒 Bloqueado</span></div>
         <div class="meta">15 rescates · 50 horas de voluntariado</div>
         <div class="progress"><div style="width:48%"></div></div>
         <div class="small">Faltan 26 horas</div>
       </div>
       <div class="cert gold">
-        <div class="head"><span>🥇 NIVEL ORO</span><span class="badge lock">🔒 Bloqueado</span></div>
+        <div class="head"><span>🥇 NIVEL ORO</span><span class="lock">🔒 Bloqueado</span></div>
         <div class="meta">30 rescates · 100 horas de voluntariado</div>
       </div>
     </div>`;
@@ -1386,30 +1845,50 @@ function scrCertifs(){
   $("#pdf").onclick = ()=>toast("Generando PDF...");
 }
 
-/* ============= Catalog of benefits ============= */
-function scrBenefits(){
-  hideNav();
-  view.classList.remove("dark");
+/* ============= Vet discounts (replaces marketplace) ============= */
+function scrVetDiscounts(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const u = currentUser();
   view.innerHTML = `
-    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Catálogo de beneficios</div></div>
+    <div class="top-app-bar">
+      <div class="left"><button class="back" id="b">←</button> Veterinarias aliadas</div>
+    </div>
     <div class="pad">
-      <div class="tabs">
-        <button class="active">Insumos</button>
-        <button>Servicios</button>
-        <button>Visibilidad</button>
+      <div class="card" style="background:linear-gradient(135deg,#f0fff7,#cfeedd);border-color:#bee9d2">
+        <div class="avatar" style="background:#fff">🏥</div>
+        <div class="meta"><p class="t">Tus PawPoints valen descuentos</p><p class="s">Canjea ${u.points.toLocaleString()} pts en veterinarias aliadas</p></div>
       </div>
-      <div class="card mt8"><div class="avatar">🍗</div><div class="meta"><p class="t">Saco de alimento 15 kg</p><p class="s">800 pts</p></div><button class="btn small">Canjear</button></div>
-      <div class="card mt8"><div class="avatar">🧴</div><div class="meta"><p class="t">Kit de limpieza general</p><p class="s">500 pts</p></div><button class="btn small">Canjear</button></div>
-      <div class="card mt8"><div class="avatar">🛏️</div><div class="meta"><p class="t">Camas para perros (2)</p><p class="s">600 pts</p></div><button class="btn small">Canjear</button></div>
-      <div class="card mt8"><div class="avatar">🍽️</div><div class="meta"><p class="t">Platos y bebederos (4)</p><p class="s">300 pts</p></div><button class="btn small">Canjear</button></div>
+      <h3 class="section">Disponibles cerca de ti</h3>
+      ${VETS.map(v=>`
+        <div class="vet-card">
+          <div class="head">
+            <div class="av">${v.ic}</div>
+            <div class="info"><p class="t">${v.name}</p><p class="s">${v.type} · ${v.area}</p></div>
+            <span class="badge ok">${v.disc.includes("%")?v.disc.split(" ")[0]:"Beneficio"}</span>
+          </div>
+          <div class="body">${v.disc}</div>
+          <div class="disc">
+            <div class="pts">Costo: <b>${v.pts} pts</b></div>
+            <button class="btn small ${u.points<v.pts?'ghost':''}" data-vet="${v.name}" ${u.points<v.pts?'disabled':''}>${u.points<v.pts?'Faltan pts':'Canjear'}</button>
+          </div>
+        </div>`).join("")}
+      <div class="small center mt12">— Más aliados próximamente —</div>
     </div>`;
   $("#b").onclick = back;
+  $$("[data-vet]", view).forEach(b=>b.onclick = ()=>{
+    const v = VETS.find(x=>x.name===b.dataset.vet);
+    const u2 = currentUser();
+    if(u2.points < v.pts){ toast("PawPoints insuficientes"); return; }
+    updateUser({points: u2.points - v.pts});
+    toast(`Canje enviado a ${v.name} ✅`);
+    scrVetDiscounts();
+  });
 }
 
-/* ============= 21. Analytics ============= */
+/* ============= Analytics ============= */
 function scrAnalytics(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Métricas de Negocio</div></div>
     <div class="pad">
@@ -1420,25 +1899,24 @@ function scrAnalytics(){
       </div>
       <div class="card mt8" style="background:linear-gradient(135deg,#eafff3,#cfeedd);border-color:#bee9d2">
         <div class="avatar" style="background:#fff">💰</div>
-        <div class="meta"><p class="t">Venta cruzada estimada</p><p class="s">Up-selling</p></div>
+        <div class="meta"><p class="t">Venta cruzada estimada</p><p class="s">Up-selling mensual</p></div>
         <div style="font-size:20px;font-weight:800;color:#147346">S/. 2,850</div>
       </div>
       <h3 class="section">Rendimiento de cupones</h3>
       <div class="card"><div class="avatar">🎟️</div><div class="meta"><p class="t">Cupón Baño Gratis</p><p class="s">85% canjeado · 17/20</p></div></div>
       <div class="card mt8"><div class="avatar">🎟️</div><div class="meta"><p class="t">Descuento 10% en Alimentos</p><p class="s">60% canjeado · 12/20</p></div></div>
       <div class="mt16"></div>
-      <button class="btn">➕ Publicar nueva oferta al catálogo</button>
+      <button class="btn">➕ Publicar nueva oferta</button>
     </div>`;
   $("#b").onclick = back;
 }
 
-/* ============= 22. Notifications ============= */
+/* ============= Notifications ============= */
 function scrNotif(){
-  if(!currentUser()) return go("splash");
-  showNav("notif");
-  view.classList.remove("dark");
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
   view.innerHTML = `
-    <div class="top-app-bar"><div class="left">Notificaciones</div><div class="right"><button class="icon-btn">Todas</button></div></div>
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Notificaciones</div><div class="right"><button class="icon-btn">Marcar leídas</button></div></div>
     <div class="pad">
       ${NOTIF.map(n=>`
         <div class="notif-item ${n.dot?'dot':''}">
@@ -1447,13 +1925,13 @@ function scrNotif(){
         </div>`).join("")}
       <div class="small center mt12">— Fin de las notificaciones —</div>
     </div>`;
+  $("#b").onclick = back;
 }
 
-/* ============= 23. Profile ============= */
+/* ============= Profile ============= */
 function scrProfile(){
-  if(!currentUser()) return go("splash");
-  showNav("profile");
-  view.classList.remove("dark");
+  if(!currentUser()) return go("login");
+  showNav("profile"); view.classList.remove("dark");
   const u = currentUser();
   view.innerHTML = `
     <div class="profile-head">
@@ -1470,9 +1948,10 @@ function scrProfile(){
     <div class="pad">
       <div class="row-link" data-act="settings"><div class="lt"><div class="ic">👤</div>Mis datos</div><div class="rt">›</div></div>
       <div class="row-link" data-act="points"><div class="lt"><div class="ic">🏆</div>Mis PawPoints</div><div class="rt">›</div></div>
-      <div class="row-link" data-act="activity"><div class="lt"><div class="ic">❤️</div>Mis adopciones</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="vetDiscounts"><div class="lt"><div class="ic">🏥</div>Descuentos en veterinarias</div><div class="rt">›</div></div>
       <div class="row-link" data-act="certifs"><div class="lt"><div class="ic">📜</div>Certificaciones de Voluntariado</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
-      <div class="row-link" data-act="settings"><div class="lt"><div class="ic">⚙️</div>Configuración</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="tips"><div class="lt"><div class="ic">💡</div>Consejos para rescatistas</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="hazards"><div class="lt"><div class="ic">⚠️</div>Peligros en la zona</div><div class="rt">›</div></div>
       <div class="row-link" data-act="help"><div class="lt"><div class="ic">❓</div>Ayuda</div><div class="rt">›</div></div>
       <div class="row-link" data-act="logout" style="color:#a52a1d"><div class="lt"><div class="ic" style="background:#fde7e4;color:#a52a1d">↩</div>Cerrar sesión</div></div>
     </div>`;
@@ -1485,8 +1964,7 @@ function scrProfile(){
 }
 
 function scrSettings(){
-  hideNav();
-  view.classList.remove("dark");
+  hideNav(); view.classList.remove("dark");
   const u = currentUser();
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Mis datos</div></div>
@@ -1495,7 +1973,7 @@ function scrSettings(){
       <div class="label">Correo</div><input class="input" id="e" value="${u.email}" readonly/>
       <div class="label">Distrito</div>
       <select class="select" id="d">
-        ${["Jesús María","Miraflores","Barranco","San Isidro","Surco","San Borja"].map(x=>`<option ${x===u.district?'selected':''}>${x}</option>`).join("")}
+        ${["Jesús María","Miraflores","Barranco","San Isidro","Surco","San Borja","Pueblo Libre","Lince","Surquillo"].map(x=>`<option ${x===u.district?'selected':''}>${x}</option>`).join("")}
       </select>
       <div class="label">Contraseña actual</div><input class="input" type="password" placeholder="••••••••"/>
       <div class="mt16"></div>
@@ -1505,6 +1983,169 @@ function scrSettings(){
   $("#save").onclick = ()=>{ updateUser({name:$("#n").value, district:$("#d").value}); toast("Datos actualizados"); back(); };
 }
 
+/* ============= TIPS (Consejos) ============= */
+function scrTips(){
+  if(!currentUser()) return go("login");
+  showNav("tips"); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left">💡 Consejos</div></div>
+    <div class="tip-hero">
+      <div class="ic">🐾</div>
+      <div><p class="t">Salva vidas con información correcta</p><p class="s">Aprende a actuar antes de acercarte a un perro</p></div>
+    </div>
+    <div class="pad" style="padding-top:6px">
+      <div class="card" data-cat="seguridad" style="cursor:pointer">
+        <div class="avatar" style="background:#fde7e4;color:#a52a1d">⚠️</div>
+        <div class="meta"><p class="t">Seguridad al rescatar</p><p class="s">5 consejos · cómo acercarte sin riesgo</p></div>
+        <span style="color:#bbb">›</span>
+      </div>
+      <div class="card mt8" data-cat="adopcion" style="cursor:pointer">
+        <div class="avatar" style="background:#defaee;color:#147346">❤️</div>
+        <div class="meta"><p class="t">Antes y después de adoptar</p><p class="s">8 consejos · adopción responsable</p></div>
+        <span style="color:#bbb">›</span>
+      </div>
+
+      <h3 class="section">Datos que ayudan a más adopciones</h3>
+      <div class="tip-card good">
+        <div class="head"><div class="ic">📊</div><div class="t">Solo el 30% de perros adultos son adoptados</div></div>
+        <div class="body">Compartir publicaciones de perros adultos triplica sus chances de encontrar hogar. <b>Comparte un perfil hoy.</b></div>
+      </div>
+      <div class="tip-card info">
+        <div class="head"><div class="ic">🌟</div><div class="t">Un perro adoptado salva indirectamente a otro</div></div>
+        <div class="body">Cada adopción libera un cupo en el albergue para rescatar a otro perro en la calle. Tu acción multiplica el impacto.</div>
+      </div>
+      <div class="tip-card tip">
+        <div class="head"><div class="ic">📸</div><div class="t">Difunde con responsabilidad</div></div>
+        <div class="body">Tomar buenas fotos (luz natural, mirada amistosa) aumenta las solicitudes de adopción hasta en un 60%. Si conoces un albergue, ofrécele tu ayuda.</div>
+      </div>
+    </div>`;
+  $$("[data-cat]", view).forEach(c=>c.onclick = ()=> go("tipsList",{cat:c.dataset.cat}));
+}
+
+function scrTipsList({cat}){
+  hideNav(); view.classList.remove("dark");
+  const titles = {seguridad:"Seguridad al rescatar", adopcion:"Adopción responsable"};
+  const items = TIPS[cat] || [];
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> ${titles[cat]}</div></div>
+    <div class="pad">
+      ${items.map(t=>`
+        <div class="tip-card ${t.kind}">
+          <div class="head"><div class="ic">${t.ic}</div><div class="t">${t.t}</div></div>
+          <div class="body">${t.body}</div>
+        </div>`).join("")}
+      <div class="small center mt12">— Recuerda: ante emergencias llama al 105 (Serenazgo) —</div>
+    </div>`;
+  $("#b").onclick = back;
+}
+
+/* ============= HAZARDS (Peligros en la zona) ============= */
+function scrHazards(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar">
+      <div class="left"><button class="back" id="b">←</button> Peligros en la zona</div>
+      <div class="right"><button class="icon-btn" id="add">＋</button></div>
+    </div>
+    <div class="hazard-banner">
+      <div class="ic">⚠️</div>
+      <div style="flex:1"><div class="t">${HAZARDS.length} alertas activas cerca de ti</div><div class="s">Reporta para proteger a la comunidad — estilo Waze</div></div>
+    </div>
+    <div class="pad" style="padding-top:8px">
+      ${HAZARDS.map((h,i)=>`
+        <div class="hazard-item">
+          <div class="row1">
+            <div class="ic ${h.sev==='crit'?'crit':h.sev==='med'?'med':'info'}">${h.ic}</div>
+            <div class="info">
+              <p class="t">${h.t}</p>
+              <p class="loc">📍 ${h.loc}</p>
+            </div>
+            <span class="badge ${h.sev==='crit'?'no':h.sev==='med'?'warn':'info'}">${h.sev==='crit'?'Crítico':h.sev==='med'?'Medio':'Aviso'}</span>
+          </div>
+          <div class="meta-row">
+            <span>${h.ago||"reciente"} · ${h.confirmed||1} confirmaciones</span>
+            <div class="actions">
+              <button class="up" data-act="up" data-id="${h.id||''}">👍 Confirmar</button>
+              <button data-act="down" data-id="${h.id||''}">👎</button>
+            </div>
+          </div>
+        </div>`).join("")}
+    </div>`;
+  $("#b").onclick = back;
+  $("#add").onclick = ()=> go("reportHazard");
+  $$("[data-act]", view).forEach(b => b.onclick = async ()=>{
+    if(b.dataset.act==="up"){
+      const id = b.dataset.id;
+      if(id) await store.confirmHazard(id);
+      const u=currentUser(); updateUser({points:u.points+5});
+      toast("Confirmaste el peligro · +5 pts");
+    } else toast("Reporte descartado");
+  });
+}
+
+function scrReportHazard(){
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Reportar peligro</div></div>
+    <div class="pad">
+      <p class="sub">Alerta a otros usuarios sobre situaciones peligrosas para perros en tu zona.</p>
+
+      <div class="label">Tipo de peligro (relacionado a perros)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="kind">
+        <span class="chip active">🐕‍🦺 Perros sueltos / jauría</span>
+        <span class="chip">☣️ Síntomas de rabia · espuma</span>
+        <span class="chip">🐶 Sarna o piel afectada</span>
+        <span class="chip">🦠 Moquillo / parvovirus</span>
+        <span class="chip">☠️ Veneno o trampa</span>
+        <span class="chip">🚛 Captura ilegal</span>
+        <span class="chip">🚨 Maltrato animal</span>
+        <span class="chip">🚗 Atropellos frecuentes</span>
+        <span class="chip">🐾 Cachorros abandonados</span>
+      </div>
+
+      <h3 class="section">Ubicación</h3>
+      <div class="card"><div class="avatar">📍</div><div class="meta"><p class="t">Av. Brasil, Jesús María</p><p class="s">Detectada automáticamente · puedes ajustarla</p></div></div>
+
+      <div class="label">Gravedad</div>
+      <div style="display:flex;gap:6px" id="sev">
+        <span class="chip">Aviso</span>
+        <span class="chip active">Medio</span>
+        <span class="chip">Crítico</span>
+      </div>
+
+      <div class="label">Descripción (opcional)</div>
+      <textarea class="textarea" placeholder="Ej. Varios atropellos esta semana cerca a la cuadra 25..."></textarea>
+
+      <div class="upload mt12" id="hzUp"><span class="ic">📷</span>Foto del lugar (opcional)</div>
+
+      <div class="mt16"></div>
+      <button class="btn" id="send">Publicar alerta</button>
+    </div>`;
+  $("#b").onclick = back;
+  attachUploader("#hzUp", { max:3, placeholder:"<span class='ic'>📷</span>Foto del lugar (opcional)" });
+  $$("#kind .chip", view).forEach(c=>c.onclick = ()=>{ $$("#kind .chip", view).forEach(x=>x.classList.remove("active")); c.classList.add("active");});
+  $$("#sev .chip", view).forEach(c=>c.onclick = ()=>{ $$("#sev .chip", view).forEach(x=>x.classList.remove("active")); c.classList.add("active");});
+  $("#send").onclick = async ()=>{
+    const kindTxt = $("#kind .chip.active", view)?.textContent.trim() || "🐕 Perros sueltos";
+    const sevTxt  = $("#sev .chip.active",  view)?.textContent.trim() || "Medio";
+    const desc    = $(".textarea", view).value || "";
+    const ic = (kindTxt.match(/^\S+/) || ["⚠️"])[0];
+    const t  = kindTxt.replace(ic, "").trim();
+    const sev = sevTxt === "Crítico" ? "crit" : sevTxt === "Aviso" ? "info" : "med";
+    const u = currentUser();
+    await store.addHazard({
+      sev, ic, t,
+      loc: (u.district || "Lima") + (desc ? " · " + desc.slice(0,50) : ""),
+      ago: "recién reportado", reports: 1, confirmed: 1,
+      reportedBy: u.name,
+    });
+    updateUser({points:u.points+15});
+    toast("Alerta publicada · +15 pts");
+    go("hazards");
+  };
+}
+
 /* ----------------- Boot ----------------- */
 function tick(){
   const d = new Date();
@@ -1512,15 +2153,17 @@ function tick(){
 }
 setInterval(tick, 30000); tick();
 
-function boot(){
+async function boot(){
+  initFirebase();
+  if(fbReady){
+    try{ await seedIfEmpty(); }catch(e){ console.error("seed error", e); }
+    setupLiveSync();
+  }
   if(state.session && currentUser()){
-    if(state.current && state.current.screen){
-      go(state.current.screen, state.current.params || {}, false);
-    } else {
-      go("map");
-    }
+    state.history = [{screen:"map"}];
+    go("map", {}, false);
   } else {
-    go("splash");
+    go("login");
   }
 }
 boot();
