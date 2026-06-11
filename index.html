@@ -6,6 +6,8 @@
 <title>PawShot — Captura. Rescata. Adopta.</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root{
     --bg:#f3f1ef;
@@ -31,13 +33,6 @@
 
   /* ================= Layout ================ */
   .stage{display:flex;gap:32px;align-items:center;justify-content:center;width:100%;max-width:1200px;flex-wrap:wrap}
-  .side-info{max-width:340px}
-  .side-info h1{font-size:28px;margin:0 0 10px;letter-spacing:-.5px}
-  .side-info p{color:var(--muted);font-size:14px;line-height:1.55;margin:0 0 12px}
-  .side-info .pill{display:inline-block;background:var(--ink);color:#fff;padding:8px 14px;border-radius:999px;font-size:12px;letter-spacing:.5px;margin-bottom:14px}
-  .side-info .demo-creds{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;font-size:12.5px;line-height:1.6}
-  .side-info .demo-creds strong{display:block;margin-bottom:6px}
-  .side-info code{background:#f1efeb;border-radius:6px;padding:1px 6px;font-size:12px}
 
   /* Phone frame */
   .phone-wrap{position:relative}
@@ -220,21 +215,29 @@
 
   /* ============== Map ============== */
   .map{
-    position:relative;height:380px;background:#e4eadf;
+    position:relative;height:420px;background:#e4eadf;
     overflow:hidden;border-bottom:1px solid var(--line);
   }
-  .map-canvas{
-    position:absolute;inset:0;overflow:hidden;cursor:grab;touch-action:none;user-select:none;
+  #leafletMap{width:100%;height:100%;z-index:1}
+  .leaflet-container{font-family:inherit;background:#dde5d3}
+  .leaflet-control-zoom{margin:78px 14px 0 0 !important;border:0 !important;border-radius:12px !important;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+  .leaflet-control-zoom a{background:#fff;color:#111;width:36px !important;height:36px !important;line-height:36px !important;font-size:18px;border:0 !important}
+  .leaflet-control-attribution{font-size:9px;background:rgba(255,255,255,.7) !important}
+  .dog-marker, .hazard-marker, .vet-marker{
+    width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #fff;
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+    box-shadow:0 4px 10px rgba(0,0,0,.3);
   }
-  .map-canvas.grabbing{cursor:grabbing}
-  .map-inner{
-    position:absolute;top:0;left:0;width:780px;height:650px;
-    background:#e4eadf;
-    background-image:
-      linear-gradient(#d3dac8 1px,transparent 1px),
-      linear-gradient(90deg,#d3dac8 1px,transparent 1px);
-    background-size:42px 42px;
-  }
+  .dog-marker.r{background:#fde7e4;color:#a52a1d}
+  .dog-marker.g{background:#defaee;color:#147346}
+  .dog-marker.b{background:#e7eefa;color:#1d4a8c}
+  .hazard-marker{background:#fff4d6;color:#8a5a00;animation:pulse 2s ease-in-out infinite}
+  .hazard-marker.crit{background:#fde7e4;color:#a52a1d}
+  .vet-marker{background:#ede4ff;color:#5a32cc}
+  .leaflet-popup-content-wrapper{border-radius:14px;box-shadow:0 8px 22px rgba(0,0,0,.18)}
+  .leaflet-popup-content{margin:10px 14px;font-size:12.5px;font-family:inherit}
+  .leaflet-popup-content b{display:block;font-size:13.5px;margin-bottom:2px}
+  .leaflet-popup-content .open-btn{display:inline-block;margin-top:6px;background:#111;color:#fff;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;cursor:pointer}
   .map-recenter{
     position:absolute;right:14px;bottom:84px;width:42px;height:42px;border-radius:50%;background:#fff;
     display:flex;align-items:center;justify-content:center;font-size:16px;border:0;cursor:pointer;
@@ -543,7 +546,6 @@
   .between{display:flex;justify-content:space-between;align-items:center}
 
   @media (max-width: 900px){
-    .side-info{display:none}
     .stage{padding:0}
     body{padding:0;background:#0e0e0e}
     .phone{width:100vw;height:100vh;border-radius:0;padding:0;box-shadow:none}
@@ -556,18 +558,6 @@
 <body>
 
 <div class="stage">
-  <div class="side-info">
-    <h1>PawShot — Captura. Rescata. Adopta.</h1>
-    <p>Una comunidad para reportar perros en la calle, encontrar familias adoptivas y mantener tu zona segura. Únete: crea tu cuenta o entra con una cuenta de ejemplo.</p>
-    <div class="demo-creds">
-      <strong>Cuentas de ejemplo</strong>
-      🧑 Ciudadano · <code>maria@demo.com</code> / <code>1234</code><br/>
-      ❤️ Adoptante · <code>juan@demo.com</code> / <code>1234</code><br/>
-      🤝 Albergue · <code>albergue@demo.com</code> / <code>1234</code><br/>
-      <span class="small">o regístrate desde la app.</span>
-    </div>
-  </div>
-
   <div class="phone-wrap">
     <div class="phone">
       <div class="screen">
@@ -605,13 +595,29 @@ const ROLES = {
   ciudadano: { label: "Ciudadano Colaborador", icon: "🧑", desc: "Reporto perros en la calle, completo misiones y ayudo a mi comunidad." },
   adoptante: { label: "Adoptante",            icon: "❤️", desc: "Busco un compañero ideal y solicito adopciones responsables." },
   albergue:  { label: "Organización Aliada",  icon: "🤝", desc: "Albergues, veterinarias, pet shops y empresas que impulsan el cambio." },
+  admin:     { label: "Administrador",         icon: "👑", desc: "Acceso total · Gestión de la plataforma." },
 };
 
 const SEED_USERS = [
-  { email:"maria@demo.com",     pass:"1234", name:"María Pérez",                 role:"ciudadano", district:"Jesús María", points:1250, level:"Héroe Nivel 5",      plan:null },
-  { email:"juan@demo.com",      pass:"1234", name:"Juan López",                  role:"adoptante", district:"Miraflores",  points:420,  level:"Aliado Nivel 2",     plan:null },
-  { email:"albergue@demo.com",  pass:"1234", name:"Albergue Patitas Felices",    role:"albergue",  district:"San Isidro",  points:5680, level:"Rescatista Nivel 4", plan:"premium" },
+  { email:"sebateri@gmail.com", pass:"admin2026", name:"Sebastián (Admin)",          role:"admin",     district:"Lima",         points:99999, level:"Administrador",      plan:"admin"   },
+  { email:"maria@demo.com",     pass:"1234",      name:"María Pérez",                role:"ciudadano", district:"Jesús María",  points:1250,  level:"Héroe Nivel 5",      plan:null     },
+  { email:"juan@demo.com",      pass:"1234",      name:"Juan López",                 role:"adoptante", district:"Miraflores",   points:420,   level:"Aliado Nivel 2",     plan:null     },
+  { email:"albergue@demo.com",  pass:"1234",      name:"Albergue Patitas Felices",   role:"albergue",  district:"San Isidro",   points:5680,  level:"Rescatista Nivel 4", plan:"premium"},
 ];
+
+/* Coordenadas de distritos de Lima (lat, lng) */
+const DISTRICT_COORDS = {
+  "Jesús María":   [-12.0719, -77.0498],
+  "Miraflores":    [-12.1196, -77.0367],
+  "San Isidro":    [-12.1075, -77.0357],
+  "Barranco":      [-12.1395, -77.0228],
+  "Pueblo Libre":  [-12.0768, -77.0635],
+  "Lince":         [-12.0855, -77.0339],
+  "Surco":         [-12.1356, -76.9931],
+  "San Borja":     [-12.1086, -77.0006],
+  "Surquillo":     [-12.1167, -77.0167],
+  "Lima":          [-12.0464, -77.0428],
+};
 
 const STATE_KEY = "pawshot_state_v2";
 
@@ -626,10 +632,10 @@ function saveState(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
 let state = loadState();
 
 let DOGS = [
-  { id:1, name:"Max",  district:"Jesús María", status:"Reportado",     age:"Adulto", sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕",       desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true,  publishedBy:"Albergue Patitas Felices" },
-  { id:2, name:"Luna", district:"Miraflores",  status:"En adopción",   age:"2 años", sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", desc:"Luna es una perrita cariñosa, juguetona y muy noble. Se lleva bien con personas y otros perros.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Rescatista temporal" },
-  { id:3, name:"Rocky",district:"Barranco",    status:"En seguimiento",age:"1 año",  sex:"Macho",  size:"Pequeño", health:["Herido"], img:"🐶", desc:"Estaba cerca del puente de los suspiros, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Barranco", caseId:"#3258", verified:false, publishedBy:"Ciudadano" },
-  { id:4, name:"Coco", district:"Jesús María", status:"En adopción",   age:"3 años", sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:1, name:"Max",  lat:-12.0719, lng:-77.0498, district:"Jesús María", status:"Reportado",     age:"Adulto", sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕",       desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true,  publishedBy:"Albergue Patitas Felices" },
+  { id:2, name:"Luna", lat:-12.1196, lng:-77.0367, district:"Miraflores",  status:"En adopción",   age:"2 años", sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", desc:"Luna es una perrita cariñosa, juguetona y muy noble. Se lleva bien con personas y otros perros.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Rescatista temporal" },
+  { id:3, name:"Rocky",lat:-12.1395, lng:-77.0228, district:"Barranco",    status:"En seguimiento",age:"1 año",  sex:"Macho",  size:"Pequeño", health:["Herido"], img:"🐶", desc:"Estaba cerca del puente de los suspiros, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Puente de los Suspiros, Barranco", caseId:"#3258", verified:false, publishedBy:"Ciudadano" },
+  { id:4, name:"Coco", lat:-12.0750, lng:-77.0540, district:"Jesús María", status:"En adopción",   age:"3 años", sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Av. Salaverry, Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
 ];
 
 const NOTIF = [
@@ -642,15 +648,22 @@ const NOTIF = [
 ];
 
 let HAZARDS = [
-  { sev:"crit", ic:"☣️", t:"Sospecha de rabia · perro con espuma", loc:"Parque Las Malvinas, Cercado",    ago:"hace 2 horas", reports:8,  confirmed:14 },
-  { sev:"crit", ic:"☠️", t:"Veneno colocado contra perros",        loc:"Av. Petit Thouars cdra. 18, Lince", ago:"hace 3 horas", reports:5,  confirmed:9 },
-  { sev:"crit", ic:"🐕‍🦺",t:"Jauría agresiva de perros sueltos",   loc:"Cerro San Cosme, La Victoria",    ago:"hace 1 hora",  reports:11, confirmed:18 },
-  { sev:"med",  ic:"🦠", t:"Foco de moquillo / parvovirus",         loc:"Refugio temporal Jr. Bolívar",    ago:"hace 1 día",   reports:6,  confirmed:8 },
-  { sev:"med",  ic:"🐶", t:"Perros con sarna visible",              loc:"Mercado Magdalena del Mar",       ago:"hace 6 horas", reports:4,  confirmed:7 },
-  { sev:"med",  ic:"🚗", t:"Atropellos frecuentes a perros",        loc:"Av. Brasil cdra. 25, Jesús María",ago:"hace 5 horas", reports:12, confirmed:23 },
-  { sev:"med",  ic:"🚛", t:"Vehículo de captura ilegal",            loc:"Av. Tomás Marsano, Surco",        ago:"hace 4 horas", reports:5,  confirmed:9 },
-  { sev:"info", ic:"🐾", t:"Cachorros abandonados (camada nueva)",  loc:"Parque Reducto, Miraflores",      ago:"hace 2 horas", reports:3,  confirmed:5 },
-  { sev:"info", ic:"🤰", t:"Perra preñada sin hogar",               loc:"Av. Salaverry cdra. 12, J.M.",    ago:"hace 8 horas", reports:2,  confirmed:3 },
+  { sev:"crit", ic:"☣️", t:"Sospecha de rabia · perro con espuma", lat:-12.0464, lng:-77.0428, loc:"Parque Las Malvinas, Cercado",    ago:"hace 2 horas", reports:8,  confirmed:14 },
+  { sev:"crit", ic:"☠️", t:"Veneno colocado contra perros",        lat:-12.0855, lng:-77.0339, loc:"Av. Petit Thouars cdra. 18, Lince", ago:"hace 3 horas", reports:5,  confirmed:9 },
+  { sev:"crit", ic:"🐕‍🦺",t:"Jauría agresiva de perros sueltos",   lat:-12.0610, lng:-77.0140, loc:"Cerro San Cosme, La Victoria",    ago:"hace 1 hora",  reports:11, confirmed:18 },
+  { sev:"med",  ic:"🦠", t:"Foco de moquillo / parvovirus",         lat:-12.0500, lng:-77.0500, loc:"Refugio temporal Jr. Bolívar",    ago:"hace 1 día",   reports:6,  confirmed:8 },
+  { sev:"med",  ic:"🐶", t:"Perros con sarna visible",              lat:-12.0894, lng:-77.0721, loc:"Mercado Magdalena del Mar",       ago:"hace 6 horas", reports:4,  confirmed:7 },
+  { sev:"med",  ic:"🚗", t:"Atropellos frecuentes a perros",        lat:-12.0710, lng:-77.0510, loc:"Av. Brasil cdra. 25, Jesús María",ago:"hace 5 horas", reports:12, confirmed:23 },
+  { sev:"med",  ic:"🚛", t:"Vehículo de captura ilegal",            lat:-12.1450, lng:-76.9870, loc:"Av. Tomás Marsano, Surco",        ago:"hace 4 horas", reports:5,  confirmed:9 },
+  { sev:"info", ic:"🐾", t:"Cachorros abandonados (camada nueva)",  lat:-12.1230, lng:-77.0380, loc:"Parque Reducto, Miraflores",      ago:"hace 2 horas", reports:3,  confirmed:5 },
+  { sev:"info", ic:"🤰", t:"Perra preñada sin hogar",               lat:-12.0768, lng:-77.0480, loc:"Av. Salaverry cdra. 12, J.M.",    ago:"hace 8 horas", reports:2,  confirmed:3 },
+];
+
+/* Veterinarias aliadas con coordenadas reales */
+const VET_MARKERS = [
+  { name:"VetCare San Isidro",   ic:"🏥", lat:-12.1075, lng:-77.0357 },
+  { name:"Pet Spa Pueblo Libre", ic:"🛁", lat:-12.0768, lng:-77.0635 },
+  { name:"Clínica Animaliada",   ic:"🏥", lat:-12.1196, lng:-77.0367 },
 ];
 
 const TIPS = {
@@ -815,17 +828,23 @@ async function seedIfEmpty(){
 }
 
 /* ---- Live sync de DOGS y HAZARDS ---- */
+function fillCoords(item){
+  if(item.lat && item.lng) return item;
+  const c = DISTRICT_COORDS[item.district] || DISTRICT_COORDS["Lima"];
+  const j = () => (Math.random()-0.5) * 0.012;
+  return { ...item, lat: c[0]+j(), lng: c[1]+j() };
+}
 function setupLiveSync(){
   if(!fbReady) return;
   fbDB.ref("dogs").on("value", snap => {
     const v = snap.val();
-    if(v) DOGS = Object.values(v).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+    if(v) DOGS = Object.values(v).map(fillCoords).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
     const cur = state.current?.screen;
     if(cur === "map" || cur === "dogDetail") renderScreen(cur, state.current.params || {});
   });
   fbDB.ref("hazards").on("value", snap => {
     const v = snap.val();
-    if(v) HAZARDS = Object.values(v).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+    if(v) HAZARDS = Object.values(v).map(fillCoords).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
     const cur = state.current?.screen;
     if(cur === "map" || cur === "hazards") renderScreen(cur, state.current.params || {});
   });
@@ -940,6 +959,7 @@ bottomNav.addEventListener("click", e=>{
 /* ----------------- Side menu ----------------- */
 function openSideMenu(){
   const u = currentUser(); if(!u) return;
+  const adminBtn = u.role === "admin" ? `<button data-go="adminPanel"><span class="ic">👑</span>Panel de Admin</button><div class="sep"></div>` : "";
   sideMenu.innerHTML = `
     <div class="top">
       <div class="avatar">${ROLES[u.role].icon}</div>
@@ -947,6 +967,7 @@ function openSideMenu(){
       <div class="role">${ROLES[u.role].label}</div>
     </div>
     <div class="items">
+      ${adminBtn}
       <button data-go="map"><span class="ic">🗺️</span>Mapa</button>
       <button data-go="tips"><span class="ic">💡</span>Consejos para rescatistas</button>
       <button data-go="hazards"><span class="ic">⚠️</span>Peligros en la zona</button>
@@ -1002,8 +1023,96 @@ function renderScreen(screen, params={}){
     case "tipsList":      return scrTipsList(params);
     case "hazards":       return scrHazards();
     case "reportHazard":  return scrReportHazard();
+    case "adminPanel":    return scrAdminPanel();
     default:              return scrLogin();
   }
+}
+
+/* ============= Admin panel ============= */
+async function scrAdminPanel(){
+  if(!currentUser() || currentUser().role !== "admin"){ toast("Solo administradores"); return go("map"); }
+  hideNav(); view.classList.remove("dark");
+  const tab = state.flow.adminTab || "stats";
+
+  let users = [];
+  if(fbReady){
+    try{ const s = await fbDB.ref("users").once("value"); users = Object.values(s.val()||{}); }catch(e){}
+  } else users = state.users;
+
+  let body = "";
+  if(tab==="stats"){
+    const counts = { ciudadano:0, adoptante:0, albergue:0, admin:0 };
+    users.forEach(u => counts[u.role] = (counts[u.role]||0)+1);
+    body = `
+      <div class="card" style="background:linear-gradient(135deg,#fffbe5,#fff3b0);border-color:#f0d699">
+        <div class="avatar" style="background:#fff">👑</div>
+        <div class="meta"><p class="t">Panel de administración</p><p class="s">Vista global de la plataforma</p></div>
+      </div>
+      <h3 class="section">Resumen</h3>
+      <div class="stats" style="background:transparent;padding:0;border:0">
+        <div class="s"><div class="n">${users.length}</div><div class="l">Usuarios</div></div>
+        <div class="s"><div class="n">${DOGS.length}</div><div class="l">Perros</div></div>
+        <div class="s"><div class="n">${HAZARDS.length}</div><div class="l">Peligros</div></div>
+        <div class="s"><div class="n">${counts.albergue||0}</div><div class="l">Albergues</div></div>
+      </div>
+      <h3 class="section">Distribución por rol</h3>
+      <div class="row-link"><div class="lt"><div class="ic">🧑</div>Ciudadanos</div><div class="rt"><b>${counts.ciudadano||0}</b></div></div>
+      <div class="row-link"><div class="lt"><div class="ic">❤️</div>Adoptantes</div><div class="rt"><b>${counts.adoptante||0}</b></div></div>
+      <div class="row-link"><div class="lt"><div class="ic">🤝</div>Organizaciones</div><div class="rt"><b>${counts.albergue||0}</b></div></div>
+      <div class="row-link"><div class="lt"><div class="ic">👑</div>Administradores</div><div class="rt"><b>${counts.admin||0}</b></div></div>
+      <h3 class="section">Estado de la base de datos</h3>
+      <div class="row-link"><div class="lt"><div class="ic" style="background:${fbReady?'#defaee':'#fde7e4'};color:${fbReady?'#147346':'#a52a1d'}">${fbReady?'✓':'!'}</div>${fbReady?'Firebase conectado':'Firebase desconectado (modo local)'}</div></div>
+    `;
+  } else if(tab==="users"){
+    body = users.map(u => `
+      <div class="card mt8">
+        <div class="avatar">${ROLES[u.role]?.icon || "👤"}</div>
+        <div class="meta"><p class="t">${u.name}</p><p class="s">${u.email} · ${ROLES[u.role]?.label || u.role}</p></div>
+        <span class="badge ok">${u.points||0} pts</span>
+      </div>`).join("");
+  } else if(tab==="dogs"){
+    body = DOGS.map(d => `
+      <div class="act-card">
+        <div class="ph">${d.img||"🐕"}</div>
+        <div class="info"><p class="t">${d.name}</p><p class="s">${d.location||d.district} · ${d.status}</p></div>
+        <button class="btn small danger" data-del-dog="${d.id}">Eliminar</button>
+      </div>`).join("");
+  } else if(tab==="hazards"){
+    body = HAZARDS.map(h => `
+      <div class="act-card">
+        <div class="ph">${h.ic}</div>
+        <div class="info"><p class="t">${h.t}</p><p class="s">${h.loc}</p></div>
+        <button class="btn small danger" data-del-hz="${h.id}">Eliminar</button>
+      </div>`).join("");
+  }
+
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 👑 Panel de Admin</div></div>
+    <div class="pad">
+      <div class="tabs">
+        <button class="${tab==='stats'?'active':''}" data-t="stats">Métricas</button>
+        <button class="${tab==='users'?'active':''}" data-t="users">Usuarios</button>
+        <button class="${tab==='dogs'?'active':''}" data-t="dogs">Perros</button>
+        <button class="${tab==='hazards'?'active':''}" data-t="hazards">Peligros</button>
+      </div>
+      ${body || '<p class="sub">Sin elementos.</p>'}
+    </div>`;
+  $("#b").onclick = back;
+  $$("[data-t]", view).forEach(b=>b.onclick = ()=>{ state.flow.adminTab = b.dataset.t; saveState(); scrAdminPanel(); });
+  $$("[data-del-dog]", view).forEach(b=>b.onclick = async ()=>{
+    const id = b.dataset.delDog;
+    if(!confirm("¿Eliminar este perro?")) return;
+    if(fbReady) await fbDB.ref("dogs/"+id).remove();
+    DOGS = DOGS.filter(x=>x.id!==id);
+    toast("Perro eliminado"); scrAdminPanel();
+  });
+  $$("[data-del-hz]", view).forEach(b=>b.onclick = async ()=>{
+    const id = b.dataset.delHz;
+    if(!confirm("¿Eliminar este peligro?")) return;
+    if(fbReady) await fbDB.ref("hazards/"+id).remove();
+    HAZARDS = HAZARDS.filter(x=>x.id!==id);
+    toast("Peligro eliminado"); scrAdminPanel();
+  });
 }
 
 /* ============= Login (entry) ============= */
@@ -1033,6 +1142,11 @@ function scrLogin(){
         <div class="demo-user" data-email="albergue@demo.com">
           <div class="av">🤝</div>
           <div class="info"><div class="name">Albergue Patitas Felices</div><div class="role">Organización aliada · San Isidro</div></div>
+          <div class="go">›</div>
+        </div>
+        <div class="demo-user" data-email="sebateri@gmail.com" style="background:linear-gradient(135deg,#fffbe5,#fff3b0);border-color:#f0d699">
+          <div class="av" style="background:#fff3b0">👑</div>
+          <div class="info"><div class="name">Sebastián · Admin</div><div class="role">Panel de administración · acceso total</div></div>
           <div class="go">›</div>
         </div>
 
@@ -1196,69 +1310,28 @@ function scrMap(){
   const fabIcon = role==="ciudadano" ? "📷" : role==="adoptante" ? "📸" : "🐕";
   const fabTitle = role==="ciudadano" ? "Reportar" : role==="adoptante" ? "Evidencia" : "Publicar";
 
+  const userDistrict = currentUser().district || "Lima";
+  const userCoords = DISTRICT_COORDS[userDistrict] || DISTRICT_COORDS["Lima"];
+
   view.innerHTML = `
     <div class="top-app-bar">
-      <div class="left"><button class="back" id="menu" style="font-size:22px">☰</button> Mapa · Jesús María</div>
+      <div class="left"><button class="back" id="menu" style="font-size:22px">☰</button> Mapa · ${userDistrict}</div>
       <div class="right"><button class="icon-btn" id="notifBtn">🔔</button></div>
     </div>
     <div class="map">
-      <div class="map-canvas" id="mapCanvas">
-        <div class="map-inner" id="mapInner">
-          <!-- Parques (área verde) -->
-          <div class="park" style="left:60px;top:90px;width:200px;height:130px"></div>
-          <div class="park-label" style="left:120px;top:145px">Parque Reducto</div>
-          <div class="park" style="left:520px;top:380px;width:180px;height:170px"></div>
-          <div class="park-label" style="left:560px;top:455px">Campo de Marte</div>
-          <div class="park" style="left:340px;top:50px;width:130px;height:90px"></div>
-          <div class="park-label" style="left:370px;top:88px">Pq. Castilla</div>
-
-          <!-- Avenidas (calles blancas) -->
-          <div class="street" style="left:0;top:260px;right:0;height:18px"></div>
-          <div class="street" style="left:0;top:460px;right:0;height:14px"></div>
-          <div class="street" style="left:0;top:120px;right:0;height:10px"></div>
-          <div class="street" style="left:280px;top:0;width:18px;bottom:0"></div>
-          <div class="street" style="left:560px;top:0;width:14px;bottom:0"></div>
-          <div class="street" style="left:110px;top:0;width:10px;bottom:0"></div>
-
-          <!-- Nombres de calles -->
-          <div class="street-name" style="left:14px;top:248px">Av. Brasil</div>
-          <div class="street-name" style="left:14px;top:108px">Av. Sucre</div>
-          <div class="street-name" style="left:14px;top:448px">Av. Salaverry</div>
-          <div class="street-name" style="left:260px;top:8px;writing-mode:vertical-rl">Jr. Lima</div>
-          <div class="street-name" style="left:540px;top:8px;writing-mode:vertical-rl">Av. Petit Thouars</div>
-
-          <!-- Pins de perros -->
-          <div class="pin r" data-dog="1" style="left:180px;top:300px"><span class="label">Max · Reportado</span>🐕</div>
-          <div class="pin g" data-dog="3" style="left:400px;top:400px"><span class="label">Rocky · Seguimiento</span>🐾</div>
-          <div class="pin b" data-dog="2" style="left:620px;top:240px"><span class="label">Luna · Adopción</span>❤️</div>
-          <div class="pin b" data-dog="4" style="left:340px;top:170px"><span class="label">Coco · Adopción</span>❤️</div>
-
-          <!-- Pins de peligros (relacionados a perros) -->
-          <div class="pin hazard crit" data-hazard="0" style="left:140px;top:170px"><span class="label">☣️ Rabia · espuma</span>☣️</div>
-          <div class="pin hazard crit" data-hazard="2" style="left:480px;top:540px"><span class="label">🐕‍🦺 Jauría agresiva</span>🐕‍🦺</div>
-          <div class="pin hazard"      data-hazard="4" style="left:230px;top:520px"><span class="label">🐶 Sarna visible</span>🐶</div>
-          <div class="pin hazard"      data-hazard="3" style="left:580px;top:120px"><span class="label">🦠 Moquillo</span>🦠</div>
-          <div class="pin hazard"      data-hazard="7" style="left:120px;top:430px"><span class="label">🐾 Cachorros</span>🐾</div>
-
-          <!-- Aliados comerciales -->
-          <div class="pin shop" data-vet="0" style="left:80px;top:380px"><span class="label">🏥 VetCare · 15%</span>🏥</div>
-          <div class="pin shop" data-vet="0" style="left:680px;top:340px"><span class="label">🛁 Pet Spa</span>🛁</div>
-        </div>
-      </div>
-
+      <div id="leafletMap"></div>
       <div class="map-toolbar">
         <div class="search">🔍 Buscar dirección o perro...</div>
         <button class="ibtn" id="filtBtn">⚙️</button>
       </div>
       <div class="map-chips">
-        <span class="chip active">Todo</span>
-        <span class="chip dot-r">🔴 Reportados</span>
-        <span class="chip dot-g">🟢 Seguimiento</span>
-        <span class="chip dot-b">❤️ Adopción</span>
-        <span class="chip dot-y">⚠️ Peligros</span>
+        <span class="chip active" data-f="all">Todo</span>
+        <span class="chip dot-r" data-f="reported">🔴 Reportados</span>
+        <span class="chip dot-g" data-f="follow">🟢 Seguimiento</span>
+        <span class="chip dot-b" data-f="adoption">❤️ Adopción</span>
+        <span class="chip dot-y" data-f="hazards">⚠️ Peligros</span>
       </div>
-      <div class="district-label">📍 Jesús María · arrastra el mapa</div>
-      <button class="map-recenter" id="recenter" title="Centrar">🎯</button>
+      <button class="map-recenter" id="recenter" title="Mi ubicación">📍</button>
       <button class="fab" id="fab">${fabIcon}</button>
       <div class="fab-label">${fabTitle}</div>
     </div>
@@ -1295,68 +1368,91 @@ function scrMap(){
   $("#qaTips").onclick = ()=> go("tips");
   $("#qaHaz").onclick = ()=> go("hazards");
 
-  /* ---- Map drag (Waze-style pan) ---- */
-  const canvas = $("#mapCanvas");
-  const inner  = $("#mapInner");
-  let dragState = { down:false, moved:false, startX:0, startY:0, x:0, y:0 };
-  const center = ()=>{
-    const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
-    const iw = inner.offsetWidth,  ih = inner.offsetHeight;
-    dragState.x = (cw - iw) / 2;
-    dragState.y = (ch - ih) / 2;
-    inner.style.transform = `translate(${dragState.x}px,${dragState.y}px)`;
-  };
-  const clamp = (v, min, max)=> Math.max(min, Math.min(max, v));
-  const apply = (nx, ny)=>{
-    const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
-    const iw = inner.offsetWidth,  ih = inner.offsetHeight;
-    nx = clamp(nx, cw - iw, 0);
-    ny = clamp(ny, ch - ih, 0);
-    dragState.x = nx; dragState.y = ny;
-    inner.style.transform = `translate(${nx}px,${ny}px)`;
-  };
-  const ptr = (e)=> e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
-  const onDown = (e)=>{
-    const p = ptr(e);
-    dragState.down = true; dragState.moved = false;
-    dragState.startX = p.clientX - dragState.x;
-    dragState.startY = p.clientY - dragState.y;
-    canvas.classList.add("grabbing");
-  };
-  const onMove = (e)=>{
-    if(!dragState.down) return;
-    e.preventDefault();
-    const p = ptr(e);
-    const nx = p.clientX - dragState.startX;
-    const ny = p.clientY - dragState.startY;
-    if(Math.abs(nx - dragState.x) > 3 || Math.abs(ny - dragState.y) > 3) dragState.moved = true;
-    apply(nx, ny);
-  };
-  const onUp = ()=>{ dragState.down = false; canvas.classList.remove("grabbing"); };
-  canvas.addEventListener("mousedown",  onDown);
-  window.addEventListener("mousemove",  onMove);
-  window.addEventListener("mouseup",    onUp);
-  canvas.addEventListener("touchstart", onDown, {passive:true});
-  canvas.addEventListener("touchmove",  onMove, {passive:false});
-  canvas.addEventListener("touchend",   onUp);
-  requestAnimationFrame(center);
-  $("#recenter").onclick = center;
+  /* ---- Mapa real de Perú con Leaflet/OpenStreetMap ---- */
+  if(window._lmap){ try{ window._lmap.remove(); }catch(e){} window._lmap = null; }
+  const lmap = L.map("leafletMap", { zoomControl:true, attributionControl:true })
+    .setView(userCoords, 14);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:19, attribution:"© OpenStreetMap",
+  }).addTo(lmap);
+  window._lmap = lmap;
 
-  /* Pin handlers (ignoran clicks tras arrastrar) */
-  const safeClick = (cb)=> (e)=>{ if(dragState.moved) return; cb(e); };
-  $$("[data-dog]", view).forEach(p=> p.addEventListener("click", safeClick(()=> go("dogDetail",{id:+p.dataset.dog}))));
-  $$("[data-hazard]", view).forEach(p=> p.addEventListener("click", safeClick(()=> go("hazards"))));
-  $$("[data-vet]", view).forEach(p=> p.addEventListener("click", safeClick(()=> go("vetDiscounts"))));
+  const renderMarkers = (filter="all")=>{
+    (window._lmarkers||[]).forEach(m => lmap.removeLayer(m));
+    window._lmarkers = [];
+    const add = (mk)=>{ window._lmarkers.push(mk); mk.addTo(lmap); };
 
-  $$(".card[data-id]", view).forEach(c=>c.onclick=()=>go("dogDetail",{id:+c.dataset.id}));
+    // Perros
+    if(filter==="all" || filter==="reported" || filter==="follow" || filter==="adoption"){
+      DOGS.forEach(d => {
+        if(!d.lat || !d.lng) return;
+        if(filter==="reported" && d.status!=="Reportado") return;
+        if(filter==="follow" && d.status!=="En seguimiento") return;
+        if(filter==="adoption" && d.status!=="En adopción") return;
+        const cls = d.status==="Reportado"?"r":d.status==="En seguimiento"?"g":"b";
+        const ic = L.divIcon({
+          className:"", html:`<div class="dog-marker ${cls}">${d.img||"🐕"}</div>`,
+          iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-32],
+        });
+        const m = L.marker([d.lat, d.lng], { icon:ic });
+        m.bindPopup(`<b>${d.name}</b>${d.location||d.district}<br/><span style="color:#888">${d.status}</span><br/><span class="open-btn" onclick="window._openDog('${d.id}')">Ver detalle</span>`);
+        add(m);
+      });
+    }
+    // Peligros
+    if(filter==="all" || filter==="hazards"){
+      HAZARDS.forEach(h => {
+        if(!h.lat || !h.lng) return;
+        const cls = h.sev==="crit"?"crit":"";
+        const ic = L.divIcon({
+          className:"", html:`<div class="hazard-marker ${cls}">${h.ic}</div>`,
+          iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-32],
+        });
+        const m = L.marker([h.lat, h.lng], { icon:ic });
+        m.bindPopup(`<b>${h.t}</b>📍 ${h.loc}<br/><span style="color:#888">${h.ago||"reciente"} · ${h.confirmed||1} confirmaciones</span><br/><span class="open-btn" onclick="window._openHazards()">Ver alertas</span>`);
+        add(m);
+      });
+    }
+    // Veterinarias
+    if(filter==="all"){
+      VET_MARKERS.forEach(v => {
+        const ic = L.divIcon({
+          className:"", html:`<div class="vet-marker">${v.ic}</div>`,
+          iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-32],
+        });
+        const m = L.marker([v.lat, v.lng], { icon:ic });
+        m.bindPopup(`<b>${v.name}</b>Veterinaria aliada<br/><span class="open-btn" onclick="window._openVets()">Ver descuentos</span>`);
+        add(m);
+      });
+    }
+  };
+  window._openDog = (id) => go("dogDetail",{id});
+  window._openHazards = () => go("hazards");
+  window._openVets = () => go("vetDiscounts");
+
+  renderMarkers("all");
+  setTimeout(()=>lmap.invalidateSize(), 100);
+
+  $("#recenter").onclick = ()=>{
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        p => { lmap.setView([p.coords.latitude, p.coords.longitude], 15); toast("📍 Centrado en tu ubicación"); },
+        () => { lmap.setView(userCoords, 14); toast("📍 Centrado en " + userDistrict); }
+      );
+    } else { lmap.setView(userCoords, 14); }
+  };
+
+  $$(".card[data-id]", view).forEach(c=>c.onclick=()=>go("dogDetail",{id:c.dataset.id}));
   $$(".map-chips .chip", view).forEach(c => c.onclick = ()=>{
     $$(".map-chips .chip", view).forEach(x=>x.classList.remove("active"));
     c.classList.add("active");
-    toast("Filtro aplicado: " + c.textContent.trim());
+    renderMarkers(c.dataset.f);
+    toast("Filtro: " + c.textContent.trim());
   });
   $("#fab").onclick = ()=>{
     if(role==="ciudadano") go("report");
     else if(role==="adoptante") go("evidence");
+    else if(role==="admin") go("adminPanel");
     else go("publish1");
   };
 }
@@ -1435,8 +1531,11 @@ function scrReport(){
     const u = currentUser();
     const desc = $(".textarea", view).value || "Reporte ciudadano";
     const healthChip = $("#health .chip.active", view)?.textContent.trim() || "Urgente";
+    const [lat, lng] = DISTRICT_COORDS[u.district] || DISTRICT_COORDS["Lima"];
+    const jitter = () => (Math.random()-0.5) * 0.012;
     await store.addDog({
       name: "Caso nuevo",
+      lat: lat + jitter(), lng: lng + jitter(),
       district: u.district,
       status: "Reportado",
       age: "Desconocido", sex: "?", size: "?",
@@ -1601,8 +1700,11 @@ function scrPublish(step){
     if(step<3) go("publish"+(step+1));
     else {
       const u = currentUser();
+      const [lat, lng] = DISTRICT_COORDS[u.district] || DISTRICT_COORDS["Lima"];
+      const jitter = () => (Math.random()-0.5) * 0.012;
       await store.addDog({
         name: "Nuevo perro " + Math.floor(Math.random()*900+100),
+        lat: lat + jitter(), lng: lng + jitter(),
         district: u.district,
         status: "En adopción",
         age: "2 años", sex: "Macho", size: "Mediano",
@@ -1946,6 +2048,7 @@ function scrProfile(){
       <div class="s"><div class="n">${u.points}</div><div class="l">PawPoints</div></div>
     </div>
     <div class="pad">
+      ${u.role==="admin" ? '<div class="row-link" data-act="adminPanel"><div class="lt"><div class="ic" style="background:#fff3b0;color:#8a5a00">👑</div>Panel de Administración</div><div class="rt"><span class="badge new">Admin</span> ›</div></div>' : ''}
       <div class="row-link" data-act="settings"><div class="lt"><div class="ic">👤</div>Mis datos</div><div class="rt">›</div></div>
       <div class="row-link" data-act="points"><div class="lt"><div class="ic">🏆</div>Mis PawPoints</div><div class="rt">›</div></div>
       <div class="row-link" data-act="vetDiscounts"><div class="lt"><div class="ic">🏥</div>Descuentos en veterinarias</div><div class="rt">›</div></div>
@@ -2134,8 +2237,11 @@ function scrReportHazard(){
     const t  = kindTxt.replace(ic, "").trim();
     const sev = sevTxt === "Crítico" ? "crit" : sevTxt === "Aviso" ? "info" : "med";
     const u = currentUser();
+    const [lat, lng] = DISTRICT_COORDS[u.district] || DISTRICT_COORDS["Lima"];
+    const jitter = () => (Math.random()-0.5) * 0.012;
     await store.addHazard({
       sev, ic, t,
+      lat: lat + jitter(), lng: lng + jitter(),
       loc: (u.district || "Lima") + (desc ? " · " + desc.slice(0,50) : ""),
       ago: "recién reportado", reports: 1, confirmed: 1,
       reportedBy: u.name,
