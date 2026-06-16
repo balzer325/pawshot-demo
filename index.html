@@ -10,22 +10,24 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root{
-    --bg:#f3f1ef;
-    --ink:#111111;
-    --ink-2:#2b2b2b;
-    --muted:#7a7a7a;
-    --line:#e6e3df;
-    --soft:#f7f5f2;
+    --bg:#F5F7FA;
+    --ink:#1E293B;
+    --ink-2:#334155;
+    --muted:#64748B;
+    --line:#E2E8F0;
+    --soft:#F8FAFC;
     --white:#ffffff;
-    --accent:#111111;
-    --mustard:#e3b35b;
-    --green:#2fa56a;
-    --red:#e0463a;
-    --yellow:#f4b94b;
-    --purple:#7c4dff;
-    --blue:#3777e3;
-    --orange:#f08a3e;
-    --shadow:0 30px 60px rgba(0,0,0,.18), 0 8px 18px rgba(0,0,0,.08);
+    --brand:#00A3E0;
+    --brand-dark:#0086B8;
+    --brand-light:#E0F4FB;
+    --accent:#FFD100;
+    --accent-dark:#E6BB00;
+    --accent-light:#FFF6CC;
+    --green:#10B981;
+    --red:#EF4444;
+    --orange:#F59E0B;
+    --purple:#8B5CF6;
+    --shadow:0 20px 50px rgba(0,40,80,.12), 0 6px 14px rgba(0,40,80,.06);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--ink);min-height:100%}
@@ -66,7 +68,7 @@
     font-size:10.5px;color:#9c9c9c;cursor:pointer;padding:6px 4px;font-family:inherit;
   }
   .bottom-nav button .ic{font-size:18px;line-height:1}
-  .bottom-nav button.active{color:var(--ink);font-weight:600}
+  .bottom-nav button.active{color:var(--brand);font-weight:700}
   .bottom-nav button.active .ic{transform:scale(1.1)}
 
   /* ================ Common UI ============== */
@@ -95,21 +97,24 @@
   .label{font-size:11px;letter-spacing:1px;color:#222;font-weight:700;margin:14px 0 6px;text-transform:uppercase}
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    background:#111;color:#fff;border:0;border-radius:999px;padding:14px 18px;width:100%;
+    background:var(--brand);color:#fff;border:0;border-radius:14px;padding:14px 18px;width:100%;
     font-size:14.5px;font-weight:600;cursor:pointer;letter-spacing:.2px;font-family:inherit;
+    box-shadow:0 4px 12px rgba(0,163,224,.25);transition:transform .1s, box-shadow .15s;
   }
+  .btn:hover{box-shadow:0 6px 16px rgba(0,163,224,.35)}
   .btn:active{transform:translateY(1px)}
-  .btn.ghost{background:#fff;color:#111;border:1px solid var(--line)}
-  .btn.dark{background:#111;color:#fff}
+  .btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand);box-shadow:none}
+  .btn.dark{background:var(--ink);color:#fff;box-shadow:0 4px 12px rgba(30,41,59,.2)}
+  .btn.accent{background:var(--accent);color:var(--ink);box-shadow:0 4px 12px rgba(255,209,0,.35)}
   .btn.small{padding:9px 14px;font-size:12.5px;width:auto}
-  .btn.danger{background:#e0463a}
+  .btn.danger{background:var(--red);box-shadow:0 4px 12px rgba(239,68,68,.25)}
   .btn[disabled]{opacity:.45;cursor:not-allowed}
 
   .chip{
     display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:12px;
-    background:#f1efeb;color:#222;border:1px solid transparent;cursor:pointer;font-weight:500;
+    background:#EEF2F7;color:var(--ink);border:1px solid transparent;cursor:pointer;font-weight:500;
   }
-  .chip.active{background:#111;color:#fff}
+  .chip.active{background:var(--brand);color:#fff}
   .chip.dot-r{background:#fde7e4;color:#a52a1d}
   .chip.dot-g{background:#defaee;color:#147346}
   .chip.dot-y{background:#fff4d6;color:#8a5a00}
@@ -299,12 +304,14 @@
   }
   .map-chips .chip.active{background:#111;color:#fff;border-color:#111}
   .fab{
-    position:absolute;right:18px;bottom:18px;width:54px;height:54px;border-radius:50%;background:#111;color:#fff;
-    display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 12px 24px rgba(0,0,0,.25);
-    border:0;font-family:inherit;
+    position:absolute;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;
+    box-shadow:0 12px 28px rgba(255,209,0,.45), 0 4px 10px rgba(0,0,0,.12);
+    border:0;font-family:inherit;font-weight:700;
   }
+  .fab:hover{transform:scale(1.05)}
   .fab-label{
-    position:absolute;right:80px;bottom:30px;background:#111;color:#fff;padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;
+    position:absolute;right:84px;bottom:32px;background:var(--ink);color:#fff;padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;
     box-shadow:0 8px 18px rgba(0,0,0,.2);pointer-events:none;
   }
   .map-legend{
@@ -592,17 +599,25 @@ const overlay = $("#overlay");
 
 /* ----------------- Data ----------------- */
 const ROLES = {
-  ciudadano: { label: "Ciudadano Colaborador", icon: "🧑", desc: "Reporto perros en la calle, completo misiones y ayudo a mi comunidad." },
-  adoptante: { label: "Adoptante",            icon: "❤️", desc: "Busco un compañero ideal y solicito adopciones responsables." },
-  albergue:  { label: "Organización Aliada",  icon: "🤝", desc: "Albergues, veterinarias, pet shops y empresas que impulsan el cambio." },
-  admin:     { label: "Administrador",         icon: "👑", desc: "Acceso total · Gestión de la plataforma." },
+  ciudadano: { label: "Protector Animal",     icon: "👤", desc: "Reporto, rescato, adopto y soy hogar temporal. Una sola cuenta para todo." },
+  adoptante: { label: "Protector Animal",     icon: "👤", desc: "Reporto, rescato, adopto y soy hogar temporal." },
+  albergue:  { label: "Organización Aliada",  icon: "🏢", desc: "Albergue, veterinaria, pet shop, fundación o empresa patrocinadora." },
+  admin:     { label: "Administrador",        icon: "👑", desc: "Acceso total · Gestión de la plataforma." },
+};
+
+const ORG_TYPES = {
+  albergue:    { label: "Albergue",                ic:"🏠", desc:"Gestiona perros rescatados y adopciones" },
+  veterinaria: { label: "Veterinaria",             ic:"🩺", desc:"Servicios médicos y campañas" },
+  petshop:     { label: "Pet Shop",                ic:"🛍️", desc:"Promociones y beneficios PawPoints" },
+  fundacion:   { label: "Fundación",               ic:"🤝", desc:"Financia y organiza iniciativas" },
+  empresa:     { label: "Empresa Patrocinadora",  ic:"💼", desc:"Responsabilidad social empresarial" },
 };
 
 const SEED_USERS = [
-  { email:"sebateri@gmail.com", pass:"admin2026", name:"Sebastián (Admin)",          role:"admin",     district:"Lima",         points:99999, level:"Administrador",      plan:"admin"   },
-  { email:"maria@demo.com",     pass:"1234",      name:"María Pérez",                role:"ciudadano", district:"Jesús María",  points:1250,  level:"Héroe Nivel 5",      plan:null     },
-  { email:"juan@demo.com",      pass:"1234",      name:"Juan López",                 role:"adoptante", district:"Miraflores",   points:420,   level:"Aliado Nivel 2",     plan:null     },
-  { email:"albergue@demo.com",  pass:"1234",      name:"Albergue Patitas Felices",   role:"albergue",  district:"San Isidro",   points:5680,  level:"Rescatista Nivel 4", plan:"premium"},
+  { email:"sebateri@gmail.com", pass:"admin2026", name:"Sebastián (Admin)",          role:"admin",     district:"Lima",         points:99999, level:"Administrador",         plan:"admin"   },
+  { email:"maria@demo.com",     pass:"1234",      name:"María Pérez",                role:"ciudadano", district:"Jesús María",  points:1250,  level:"Protector Nivel 5",     plan:null     },
+  { email:"juan@demo.com",      pass:"1234",      name:"Juan López",                 role:"adoptante", district:"Miraflores",   points:420,   level:"Protector Nivel 2",     plan:null     },
+  { email:"albergue@demo.com",  pass:"1234",      name:"Albergue Patitas Felices",   role:"albergue",  district:"San Isidro",   points:5680,  level:"Aliado Premium Nivel 4",plan:"premium", orgType:"albergue"},
 ];
 
 /* Coordenadas de distritos de Lima (lat, lng) */
@@ -664,6 +679,39 @@ const VET_MARKERS = [
   { name:"VetCare San Isidro",   ic:"🏥", lat:-12.1075, lng:-77.0357 },
   { name:"Pet Spa Pueblo Libre", ic:"🛁", lat:-12.0768, lng:-77.0635 },
   { name:"Clínica Animaliada",   ic:"🏥", lat:-12.1196, lng:-77.0367 },
+];
+
+/* Insignias (logros) - PDF: Primer Rescate, Protector Activo, etc. */
+const BADGES = [
+  { id:"primer_rescate",     ic:"🏅", name:"Primer Rescate",     desc:"Reporta y ayuda a tu primer perro en situación de riesgo.", req:1, unit:"rescate" },
+  { id:"protector_activo",   ic:"🛡️", name:"Protector Activo",   desc:"Realiza 10 acciones positivas en la comunidad.", req:10, unit:"acciones" },
+  { id:"adoptante_resp",     ic:"❤️", name:"Adoptante Responsable", desc:"Completa una adopción y sube tu primera evidencia post-adopción.", req:1, unit:"adopción" },
+  { id:"voluntario_destac",  ic:"⭐", name:"Voluntario Destacado", desc:"Acumula 50 horas de voluntariado certificadas por aliados.", req:50, unit:"horas" },
+  { id:"rescatista_experto", ic:"🏆", name:"Rescatista Experto", desc:"Participa en 25 rescates validados por organizaciones aliadas.", req:25, unit:"rescates" },
+];
+
+/* Donaciones transparentes - impacto verificable */
+const IMPACT = {
+  alimento_kg: 1245,
+  vacunas: 87,
+  medicamentos: 32,
+  albergues: 9,
+  total_recaudado: 4280,
+};
+
+const DONATION_OPTIONS = [
+  { amount:10,  desc:"Alimenta a 1 perro por 3 días" },
+  { amount:25,  desc:"Vacuna a 1 perro contra rabia" },
+  { amount:50,  desc:"Esterilización parcial para 1 perro" },
+  { amount:100, desc:"Kit completo para perro rescatado" },
+];
+
+/* Campañas comunitarias patrocinadas */
+const CAMPAIGNS = [
+  { id:1, ic:"💉", title:"Vacunación masiva gratuita", sponsor:"Laboratorios Vet+", area:"Jesús María · Lince", date:"Sábado 20 dic", participants:142, goal:200 },
+  { id:2, ic:"🏠", title:"Jornada de adopción", sponsor:"Albergue Patitas Felices", area:"Parque Kennedy, Miraflores", date:"Domingo 21 dic", participants:78, goal:100 },
+  { id:3, ic:"✂️", title:"Esterilización a S/. 30", sponsor:"VetCare + Municipalidad", area:"Pueblo Libre", date:"Lunes 22 dic", participants:54, goal:80 },
+  { id:4, ic:"🍖", title:"Recolección de alimento", sponsor:"PetShop Patitas", area:"Toda Lima", date:"Hasta 31 dic", participants:230, goal:500 },
 ];
 
 const TIPS = {
@@ -968,14 +1016,18 @@ function openSideMenu(){
     </div>
     <div class="items">
       ${adminBtn}
-      <button data-go="map"><span class="ic">🗺️</span>Mapa</button>
-      <button data-go="tips"><span class="ic">💡</span>Consejos para rescatistas</button>
-      <button data-go="hazards"><span class="ic">⚠️</span>Peligros en la zona</button>
-      <button data-go="reportHazard"><span class="ic">🚨</span>Reportar peligro</button>
+      <button data-go="map"><span class="ic">🗺️</span>Mapa interactivo</button>
+      <button data-go="campaigns"><span class="ic">🎯</span>Campañas comunitarias</button>
+      <button data-go="donations"><span class="ic">💝</span>Donaciones transparentes</button>
+      <button data-go="tips"><span class="ic">💡</span>Centro educativo</button>
+      <button data-go="hazards"><span class="ic">⚠️</span>Zonas de riesgo</button>
+      <button data-go="reportHazard"><span class="ic">🚨</span>Reportar zona de riesgo</button>
       <div class="sep"></div>
       <button data-go="activity"><span class="ic">📂</span>Mi actividad</button>
       <button data-go="points"><span class="ic">🏆</span>Mis PawPoints</button>
-      <button data-go="vetDiscounts"><span class="ic">🏥</span>Descuentos en veterinarias</button>
+      <button data-go="badges"><span class="ic">🏅</span>Mis Insignias</button>
+      <button data-go="certifs"><span class="ic">📜</span>Mis Certificados</button>
+      <button data-go="vetDiscounts"><span class="ic">🏥</span>Descuentos veterinarias</button>
       <button data-go="notif"><span class="ic">🔔</span>Notificaciones</button>
       <div class="sep"></div>
       <button data-go="profile"><span class="ic">👤</span>Mi perfil</button>
@@ -1024,8 +1076,118 @@ function renderScreen(screen, params={}){
     case "hazards":       return scrHazards();
     case "reportHazard":  return scrReportHazard();
     case "adminPanel":    return scrAdminPanel();
+    case "badges":        return scrBadges();
+    case "donations":     return scrDonations();
+    case "campaigns":     return scrCampaigns();
     default:              return scrLogin();
   }
+}
+
+/* ============= INSIGNIAS ============= */
+function scrBadges(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const u = currentUser();
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🏅 Mis Insignias</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,#FFF6CC,#FFE680);border-color:var(--accent)">
+        <div class="avatar" style="background:#fff">🏆</div>
+        <div class="meta"><p class="t">Logros desbloqueados</p><p class="s">Acumula acciones reales para obtener nuevas insignias</p></div>
+      </div>
+      ${BADGES.map((b,i)=>{
+        const unlocked = i < 2;
+        return `
+        <div class="card mt8" style="opacity:${unlocked?'1':'.6'}">
+          <div class="avatar" style="background:${unlocked?'var(--accent-light)':'#EEF2F7'};color:${unlocked?'var(--ink)':'#aaa'};font-size:28px">${b.ic}</div>
+          <div class="meta">
+            <p class="t">${b.name} ${unlocked?'<span class="badge ok">Desbloqueada</span>':'<span class="badge">🔒</span>'}</p>
+            <p class="s">${b.desc}</p>
+            ${unlocked?'':`<div class="progress mt8"><div style="width:${(i-2)*20+30}%;background:var(--brand)"></div></div>`}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`;
+  $("#b").onclick = back;
+}
+
+/* ============= DONACIONES TRANSPARENTES ============= */
+function scrDonations(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 💝 Donaciones</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,var(--brand-light),#B8E5F5);border-color:var(--brand)">
+        <div class="avatar" style="background:#fff;color:var(--brand)">📊</div>
+        <div class="meta"><p class="t">Impacto verificable</p><p class="s">Cada aporte se traduce en ayuda real para los perros</p></div>
+      </div>
+
+      <h3 class="section">Lo que hemos logrado juntos</h3>
+      <div class="row mt8">
+        <div class="card" style="flex-direction:column;text-align:center;background:var(--brand-light);border-color:var(--brand)">
+          <div style="font-size:28px;font-weight:800;color:var(--brand)">${IMPACT.alimento_kg}</div>
+          <div class="small"><b>kg de alimento</b><br/>entregado</div>
+        </div>
+        <div class="card" style="flex-direction:column;text-align:center;background:#FFF6CC;border-color:var(--accent)">
+          <div style="font-size:28px;font-weight:800;color:var(--ink)">${IMPACT.vacunas}</div>
+          <div class="small"><b>vacunas</b><br/>financiadas</div>
+        </div>
+      </div>
+      <div class="row mt8">
+        <div class="card" style="flex-direction:column;text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--green)">${IMPACT.medicamentos}</div>
+          <div class="small"><b>medicamentos</b><br/>adquiridos</div>
+        </div>
+        <div class="card" style="flex-direction:column;text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--purple)">${IMPACT.albergues}</div>
+          <div class="small"><b>albergues</b><br/>beneficiados</div>
+        </div>
+      </div>
+
+      <h3 class="section">Aporta ahora</h3>
+      <p class="sub">El 100% de tu donación va directo a albergues aliados. Sin comisiones.</p>
+      ${DONATION_OPTIONS.map(d=>`
+        <div class="card mt8" data-amount="${d.amount}" style="cursor:pointer">
+          <div class="avatar" style="background:var(--brand-light);color:var(--brand)">S/.</div>
+          <div class="meta"><p class="t">S/. ${d.amount}.00</p><p class="s">${d.desc}</p></div>
+          <button class="btn small accent" style="width:auto">Donar</button>
+        </div>`).join("")}
+      <div class="small center mt12">Total recaudado este mes: <b>S/. ${IMPACT.total_recaudado.toLocaleString()}</b></div>
+    </div>`;
+  $("#b").onclick = back;
+  $$("[data-amount]", view).forEach(c => c.onclick = ()=>{
+    toast(`Pasarela de pago · S/. ${c.dataset.amount} (demo)`);
+  });
+}
+
+/* ============= CAMPAÑAS COMUNITARIAS ============= */
+function scrCampaigns(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🎯 Campañas</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
+        <div class="avatar" style="background:#fff">📣</div>
+        <div class="meta"><p class="t">Únete a una campaña</p><p class="s">Patrocinadas por marcas aliadas · Gana PawPoints participando</p></div>
+      </div>
+      ${CAMPAIGNS.map(c=>`
+        <div class="card mt8">
+          <div class="avatar" style="background:var(--brand-light);font-size:28px">${c.ic}</div>
+          <div class="meta">
+            <p class="t">${c.title}</p>
+            <p class="s">📍 ${c.area} · ${c.date}</p>
+            <p class="s">Patrocina: <b>${c.sponsor}</b></p>
+            <div class="progress mt8"><div style="width:${Math.round(c.participants/c.goal*100)}%;background:var(--brand)"></div></div>
+            <div class="small">${c.participants}/${c.goal} participantes</div>
+          </div>
+        </div>`).join("")}
+      <div class="mt16"></div>
+      <button class="btn accent" id="join">Unirme a una campaña</button>
+    </div>`;
+  $("#b").onclick = back;
+  $("#join").onclick = ()=>{ const u=currentUser(); updateUser({points:u.points+30}); toast("¡Inscrito! +30 PawPoints"); };
 }
 
 /* ============= Admin panel ============= */
@@ -1196,18 +1358,24 @@ function scrLogin(){
   };
 }
 
-/* ============= Role selection ============= */
+/* ============= Role selection (2 perfiles unificados) ============= */
 function scrRole(){
   hideNav(); view.classList.remove("dark");
-  const cards = Object.entries(ROLES).map(([k,r])=>`
-    <div class="card" data-role="${k}" style="margin-bottom:10px;cursor:pointer">
-      <div class="avatar">${r.icon}</div>
-      <div class="meta"><p class="t">${r.label}</p><p class="s">${r.desc}</p></div>
-      <span style="color:#bbb">›</span>
-    </div>`).join("");
   view.innerHTML = `
-    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> ¿Cómo deseas participar?</div></div>
-    <div class="pad"><p class="sub">Tú defines cómo usarás PawShot.</p>${cards}</div>`;
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Elige tu tipo de cuenta</div></div>
+    <div class="pad">
+      <p class="sub">PawShot tiene 2 perfiles. Como Protector puedes hacerlo todo: reportar, rescatar, adoptar y ser hogar temporal.</p>
+      <div class="card" data-role="ciudadano" style="margin-bottom:10px;cursor:pointer;border:1.5px solid var(--brand-light)">
+        <div class="avatar" style="background:var(--brand-light);color:var(--brand)">👤</div>
+        <div class="meta"><p class="t">Protector Animal</p><p class="s">Para ciudadanos. Reporta, rescata, adopta, sé hogar temporal y participa en campañas.</p></div>
+        <span style="color:var(--brand);font-size:18px">›</span>
+      </div>
+      <div class="card" data-role="albergue" style="cursor:pointer;border:1.5px solid var(--accent-light)">
+        <div class="avatar" style="background:var(--accent-light);color:var(--ink)">🏢</div>
+        <div class="meta"><p class="t">Organización Aliada</p><p class="s">Albergues, veterinarias, pet shops, fundaciones o empresas patrocinadoras.</p></div>
+        <span style="color:var(--ink);font-size:18px">›</span>
+      </div>
+    </div>`;
   $("#b").onclick = ()=> go("login");
   $$("[data-role]", view).forEach(c=>c.onclick = ()=>{
     state.flow.role = c.dataset.role; saveState(); go("register");
@@ -1326,10 +1494,11 @@ function scrMap(){
       </div>
       <div class="map-chips">
         <span class="chip active" data-f="all">Todo</span>
-        <span class="chip dot-r" data-f="reported">🔴 Reportados</span>
-        <span class="chip dot-g" data-f="follow">🟢 Seguimiento</span>
+        <span class="chip dot-r" data-f="reported">🟠 Casos activos</span>
+        <span class="chip dot-r" data-f="urgent">🚨 Rescates urgentes</span>
         <span class="chip dot-b" data-f="adoption">❤️ Adopción</span>
-        <span class="chip dot-y" data-f="hazards">⚠️ Peligros</span>
+        <span class="chip dot-y" data-f="hazards">⚠️ Zonas de riesgo</span>
+        <span class="chip" style="background:#ede4ff;color:#5a32cc" data-f="orgs">🏠 Aliados</span>
       </div>
       <button class="map-recenter" id="recenter" title="Mi ubicación">📍</button>
       <button class="fab" id="fab">${fabIcon}</button>
@@ -1383,11 +1552,12 @@ function scrMap(){
     const add = (mk)=>{ window._lmarkers.push(mk); mk.addTo(lmap); };
 
     // Perros
-    if(filter==="all" || filter==="reported" || filter==="follow" || filter==="adoption"){
+    if(filter==="all" || filter==="reported" || filter==="urgent" || filter==="adoption"){
       DOGS.forEach(d => {
         if(!d.lat || !d.lng) return;
-        if(filter==="reported" && d.status!=="Reportado") return;
-        if(filter==="follow" && d.status!=="En seguimiento") return;
+        const isUrgent = (d.health||[]).some(h => /urgent/i.test(h)) || /herido|rabia/i.test((d.desc||""));
+        if(filter==="reported" && !["Reportado","Recibiendo ayuda","Rescate en proceso","En seguimiento"].includes(d.status)) return;
+        if(filter==="urgent" && !isUrgent) return;
         if(filter==="adoption" && d.status!=="En adopción") return;
         const cls = d.status==="Reportado"?"r":d.status==="En seguimiento"?"g":"b";
         const ic = L.divIcon({
@@ -1413,8 +1583,8 @@ function scrMap(){
         add(m);
       });
     }
-    // Veterinarias
-    if(filter==="all"){
+    // Veterinarias y aliados
+    if(filter==="all" || filter==="orgs"){
       VET_MARKERS.forEach(v => {
         const ic = L.divIcon({
           className:"", html:`<div class="vet-marker">${v.ic}</div>`,
@@ -1894,15 +2064,12 @@ function scrPoints(){
     </div>
     <div class="pad">
       ${!isOrg?`
-        <div class="progress"><div style="width:62%"></div></div>
-        <div class="promo">
-          <div class="ic">⚡</div>
-          <div style="flex:1"><div class="t">¡Duplica tus puntos!</div><div class="s">PawShot Pro · S/. 9.90/mes</div></div>
-          <button>Activar</button>
-        </div>
-        <button class="btn mt12" id="vet">🏥 Canjear en veterinarias aliadas</button>
+        <div class="progress"><div style="width:62%;background:var(--brand)"></div></div>
+        <div class="small">Los PawPoints se obtienen <b>solo con acciones reales</b>: reportar casos, confirmar ubicaciones, participar en rescates, adoptar.</div>
+        <button class="btn mt12 accent" id="vet">🏥 Canjear en veterinarias aliadas</button>
         <button class="btn ghost mt8" id="cert">📜 Mis Certificados de Voluntariado</button>
-        <button class="btn ghost mt8" id="recharge">💎 Recargar PawPoints</button>
+        <button class="btn ghost mt8" id="badges">🏅 Mis Insignias</button>
+        <button class="btn ghost mt8" id="donate">💝 Donaciones transparentes</button>
       `:`
         <h3 class="section">Cómo acumulamos puntos</h3>
         <div class="row-link"><div class="lt"><div class="ic">🐕</div>Casos tomados</div><div class="rt"><b>+2,150 pts</b></div></div>
@@ -1915,8 +2082,9 @@ function scrPoints(){
     </div>`;
   $("#bf")?.addEventListener("click",()=>go("vetDiscounts"));
   $("#vet")?.addEventListener("click",()=>go("vetDiscounts"));
-  $("#recharge")?.addEventListener("click",()=>toast("Pasarela de recarga · demo"));
   $("#cert")?.addEventListener("click",()=>go("certifs"));
+  $("#badges")?.addEventListener("click",()=>go("badges"));
+  $("#donate")?.addEventListener("click",()=>go("donations"));
   $("#an")?.addEventListener("click",()=>go("analytics"));
 }
 
@@ -2051,10 +2219,13 @@ function scrProfile(){
       ${u.role==="admin" ? '<div class="row-link" data-act="adminPanel"><div class="lt"><div class="ic" style="background:#fff3b0;color:#8a5a00">👑</div>Panel de Administración</div><div class="rt"><span class="badge new">Admin</span> ›</div></div>' : ''}
       <div class="row-link" data-act="settings"><div class="lt"><div class="ic">👤</div>Mis datos</div><div class="rt">›</div></div>
       <div class="row-link" data-act="points"><div class="lt"><div class="ic">🏆</div>Mis PawPoints</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="badges"><div class="lt"><div class="ic" style="background:var(--accent-light)">🏅</div>Mis Insignias</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="certifs"><div class="lt"><div class="ic">📜</div>Certificados de Voluntariado</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
+      <div class="row-link" data-act="campaigns"><div class="lt"><div class="ic" style="background:var(--accent-light)">🎯</div>Campañas comunitarias</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="donations"><div class="lt"><div class="ic" style="background:var(--brand-light)">💝</div>Donaciones transparentes</div><div class="rt">›</div></div>
       <div class="row-link" data-act="vetDiscounts"><div class="lt"><div class="ic">🏥</div>Descuentos en veterinarias</div><div class="rt">›</div></div>
-      <div class="row-link" data-act="certifs"><div class="lt"><div class="ic">📜</div>Certificaciones de Voluntariado</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
-      <div class="row-link" data-act="tips"><div class="lt"><div class="ic">💡</div>Consejos para rescatistas</div><div class="rt">›</div></div>
-      <div class="row-link" data-act="hazards"><div class="lt"><div class="ic">⚠️</div>Peligros en la zona</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="tips"><div class="lt"><div class="ic">💡</div>Centro educativo</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="hazards"><div class="lt"><div class="ic">⚠️</div>Zonas de riesgo</div><div class="rt">›</div></div>
       <div class="row-link" data-act="help"><div class="lt"><div class="ic">❓</div>Ayuda</div><div class="rt">›</div></div>
       <div class="row-link" data-act="logout" style="color:#a52a1d"><div class="lt"><div class="ic" style="background:#fde7e4;color:#a52a1d">↩</div>Cerrar sesión</div></div>
     </div>`;
