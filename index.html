@@ -306,15 +306,24 @@
   }
   .map-chips .chip.active{background:#111;color:#fff;border-color:#111}
   .fab{
-    position:absolute;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--ink);
-    display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;
-    box-shadow:0 12px 28px rgba(255,209,0,.45), 0 4px 10px rgba(0,0,0,.12);
-    border:0;font-family:inherit;font-weight:700;
+    position:absolute;right:16px;bottom:16px;width:68px;height:68px;border-radius:50%;background:var(--accent);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;font-size:38px;cursor:pointer;
+    box-shadow:0 12px 30px rgba(255,209,0,.55), 0 4px 12px rgba(0,0,0,.2);
+    border:3px solid #fff;font-family:inherit;font-weight:300;line-height:1;z-index:20;
+    animation:fabPulse 2.5s ease-in-out infinite;
   }
-  .fab:hover{transform:scale(1.05)}
+  @keyframes fabPulse{
+    0%,100%{box-shadow:0 12px 30px rgba(255,209,0,.55), 0 4px 12px rgba(0,0,0,.2)}
+    50%{box-shadow:0 0 0 10px rgba(255,209,0,.18), 0 12px 30px rgba(255,209,0,.55), 0 4px 12px rgba(0,0,0,.2)}
+  }
+  .fab:hover{transform:scale(1.08);animation:none}
   .fab-label{
-    position:absolute;right:84px;bottom:32px;background:var(--ink);color:#fff;padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;
-    box-shadow:0 8px 18px rgba(0,0,0,.2);pointer-events:none;
+    position:absolute;right:94px;bottom:36px;background:var(--ink);color:#fff;padding:7px 13px;border-radius:999px;font-size:12px;font-weight:700;
+    box-shadow:0 8px 18px rgba(0,0,0,.25);pointer-events:none;z-index:19;
+  }
+  .fab-label:after{
+    content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+    border:6px solid transparent;border-left-color:var(--ink);
   }
   .map-legend{
     display:flex;gap:10px;justify-content:center;padding:10px 12px;border-bottom:1px solid var(--line);font-size:11px;color:#444;flex-wrap:wrap;
@@ -710,12 +719,12 @@ const DONATION_OPTIONS = [
 
 /* ============= SISTEMA DE MISIONES con cooldown ============= */
 const MISSIONS = [
-  { id:"report",   ic:"📷", title:"Reportar perro callejero",     desc:"Sube una foto de un perro en situación de riesgo.", pts:20, cooldownH:1,   target:5  },
-  { id:"confirm",  ic:"👍", title:"Confirmar zona de riesgo",      desc:"Valida un peligro reportado por la comunidad.",     pts:5,  cooldownH:0.5, target:10 },
-  { id:"share",    ic:"📲", title:"Compartir un caso",             desc:"Difunde un caso para que llegue a más gente.",      pts:10, cooldownH:6,   target:3  },
-  { id:"evidence", ic:"📸", title:"Subir evidencia post-adopción", desc:"Demuestra el bienestar de tu perro adoptado.",      pts:25, cooldownH:12,  target:1  },
-  { id:"campaign", ic:"🎯", title:"Unirse a campaña comunitaria",  desc:"Inscríbete a una campaña activa.",                  pts:30, cooldownH:24,  target:2  },
-  { id:"daily",    ic:"🌅", title:"Visita diaria",                 desc:"Entra a la app cada día y revisa los reportes.",    pts:5,  cooldownH:20,  target:30 },
+  { id:"report",   ic:"📷", title:"Reportar perro callejero",     desc:"Sube una foto de un perro en situación de riesgo.", pts:20, cooldownH:1,   target:5,  goto:"report",     cta:"Reportar ahora" },
+  { id:"confirm",  ic:"👍", title:"Confirmar zona de riesgo",      desc:"Valida un peligro reportado por la comunidad.",     pts:5,  cooldownH:0.5, target:10, goto:"hazards",    cta:"Ver peligros" },
+  { id:"share",    ic:"📲", title:"Compartir un caso",             desc:"Difunde un caso para que llegue a más gente.",      pts:10, cooldownH:6,   target:3,  goto:"map",        cta:"Buscar caso" },
+  { id:"evidence", ic:"📸", title:"Subir evidencia post-adopción", desc:"Demuestra el bienestar de tu perro adoptado.",      pts:25, cooldownH:12,  target:1,  goto:"evidence",   cta:"Subir evidencia" },
+  { id:"campaign", ic:"🎯", title:"Unirse a campaña comunitaria",  desc:"Inscríbete a una campaña activa.",                  pts:30, cooldownH:24,  target:2,  goto:"campaigns",  cta:"Ver campañas" },
+  { id:"daily",    ic:"🌅", title:"Visita diaria",                 desc:"Solo entra a la app cada día. Es automática.",      pts:5,  cooldownH:20,  target:30, goto:null,         cta:"Automática" },
 ];
 
 function missionStatus(missionId){
@@ -1143,6 +1152,7 @@ function scrMissions(){
       ${MISSIONS.map(m => {
         const s = missionStatus(m.id);
         const pct = Math.min(100, Math.round((s.count/m.target)*100));
+        const canGo = m.goto && s.ready;
         return `
         <div class="card mt8" style="flex-direction:column;align-items:stretch">
           <div style="display:flex;gap:12px;align-items:center">
@@ -1163,10 +1173,18 @@ function scrMissions(){
               <span>${pct}%</span>
             </div>
           </div>
+          ${m.goto ? `
+            <button class="btn ${canGo?'accent':'ghost'} small mt12" data-mgo="${m.goto}" ${!canGo?'disabled':''} style="width:100%;padding:11px">
+              ${canGo? m.cta + ' →' : '⏰ Bloqueada · '+fmtCooldown(s.remaining)}
+            </button>
+          ` : `<div class="small center mt12" style="color:var(--green)">🔄 Se cumple sola al entrar a la app</div>`}
         </div>`;
       }).join("")}
-      <div class="small center mt16">💡 <b>Las misiones se cumplen automáticamente</b> al subir fotos, confirmar peligros, compartir casos o adoptar.</div>
+      <div class="small center mt16" style="background:var(--brand-light);padding:12px;border-radius:12px">
+        💡 <b>Cómo funcionan</b>: cada misión te lleva a la pantalla donde se cumple. Al hacer la acción (subir foto, confirmar, compartir), se completa y ganas los puntos. Después queda bloqueada hasta que pase el tiempo de espera.
+      </div>
     </div>`;
+  $$("[data-mgo]", view).forEach(b => b.onclick = ()=> go(b.dataset.mgo));
 }
 
 /* ============= INSIGNIAS ============= */
@@ -1539,8 +1557,8 @@ function scrMap(){
   if(!currentUser()) return go("login");
   showNav("map"); view.classList.remove("dark");
   const role = currentUser().role;
-  const fabIcon = "＋";
-  const fabTitle = role==="admin" ? "Admin" : role==="albergue" ? "Publicar perro" : "Reportar / Evidencia";
+  const fabIcon = "+";
+  const fabTitle = role==="admin" ? "Admin" : role==="albergue" ? "Publicar perro" : "Crear caso";
 
   const userDistrict = currentUser().district || "Lima";
   const userCoords = DISTRICT_COORDS[userDistrict] || DISTRICT_COORDS["Lima"];
