@@ -491,11 +491,11 @@
   .hazard-item{
     background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;
   }
-  .hazard-item .row1{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .hazard-item .row1{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
   .hazard-item .row1 .ic{
-    width:46px;height:46px;min-width:46px;min-height:46px;border-radius:50%;
+    flex:0 0 48px;width:48px !important;height:48px !important;border-radius:50% !important;
     background:#fff4d6;color:#8a5a00;display:flex;align-items:center;justify-content:center;
-    font-size:22px;flex-shrink:0;aspect-ratio:1/1;line-height:1;
+    font-size:22px;line-height:1;align-self:flex-start;overflow:hidden;
   }
   .hazard-item .row1 .ic.crit{background:#fde7e4;color:#a52a1d}
   .hazard-item .row1 .ic.med{background:#fff4d6;color:#8a5a00}
@@ -503,9 +503,6 @@
   .hazard-item .row1 .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .hazard-item .row1 .info .t{font-weight:700;font-size:13.5px;margin:0;line-height:1.3}
   .hazard-item .row1 .info .loc{font-size:11.5px;color:var(--muted);margin:0;line-height:1.3}
-  .hazard-item .row1 .info{flex:1;min-width:0}
-  .hazard-item .row1 .t{font-weight:700;font-size:13.5px;margin:0}
-  .hazard-item .row1 .loc{font-size:11.5px;color:var(--muted);margin:2px 0 0}
   .hazard-item .meta-row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);margin-top:8px}
   .hazard-item .meta-row .actions{display:flex;gap:6px}
   .hazard-item .meta-row .actions button{
@@ -697,9 +694,19 @@ const BADGES = [
   { id:"primer_rescate",     ic:"🏅", name:"Primer Rescate",     desc:"Reporta y ayuda a tu primer perro en situación de riesgo.", req:1, unit:"rescate" },
   { id:"protector_activo",   ic:"🛡️", name:"Protector Activo",   desc:"Realiza 10 acciones positivas en la comunidad.", req:10, unit:"acciones" },
   { id:"adoptante_resp",     ic:"❤️", name:"Adoptante Responsable", desc:"Completa una adopción y sube tu primera evidencia post-adopción.", req:1, unit:"adopción" },
+  { id:"donante",            ic:"💝", name:"Donante Solidario",  desc:"Realiza tu primera donación a la plataforma. Apoya causas reales.", req:1, unit:"donación" },
   { id:"voluntario_destac",  ic:"⭐", name:"Voluntario Destacado", desc:"Acumula 50 horas de voluntariado certificadas por aliados.", req:50, unit:"horas" },
   { id:"rescatista_experto", ic:"🏆", name:"Rescatista Experto", desc:"Participa en 25 rescates validados por organizaciones aliadas.", req:25, unit:"rescates" },
 ];
+
+/* Helper: usuario premium (cosmético para protector, B2B para org) */
+function isPremium(u){ return u && u.subscription === "active"; }
+function nameDisplay(u){
+  if(!u) return "";
+  const star = isPremium(u) ? ' <span style="color:#FFD700">⭐</span>' : '';
+  const color = (isPremium(u) && u.role!=="albergue") ? 'color:#B8860B;background:linear-gradient(90deg,#B8860B,#FFD700);-webkit-background-clip:text;-webkit-text-fill-color:transparent' : '';
+  return `<span style="${color}">${u.name}</span>${star}`;
+}
 
 /* Donaciones transparentes - impacto verificable */
 const IMPACT = {
@@ -786,12 +793,12 @@ const TIPS = {
 };
 
 const VETS = [
-  { name:"VetCare San Isidro",        type:"Clínica veterinaria",  area:"San Isidro",   disc:"15% en consultas + chequeo gratis", pts:100, ic:"🏥" },
-  { name:"Pet Spa Pueblo Libre",      type:"Estética canina",      area:"Pueblo Libre", disc:"Baño y corte gratis (1ra vez)",     pts:150, ic:"🛁" },
-  { name:"Clínica Animaliada",        type:"Clínica veterinaria",  area:"Miraflores",   disc:"20% en esterilización",             pts:250, ic:"🏥" },
-  { name:"Lab Animales Sano",         type:"Laboratorio",          area:"Jesús María",  disc:"30% en análisis sanguíneos",        pts:120, ic:"🧪" },
-  { name:"PetShop Patitas",           type:"Pet shop aliado",      area:"Barranco",     disc:"10% en alimento premium",           pts:80,  ic:"🛒" },
-  { name:"Clínica Veterinaria 24/7",  type:"Emergencias",          area:"Surquillo",    disc:"S/. 30 dcto. en consulta urgente",  pts:200, ic:"🚑" },
+  { name:"VetCare San Isidro",        type:"Clínica veterinaria",  area:"San Isidro",   disc:"15% en consultas + chequeo gratis", pts:100, ic:"🏥", premium:true  },
+  { name:"Clínica Animaliada",        type:"Clínica veterinaria",  area:"Miraflores",   disc:"20% en esterilización",             pts:250, ic:"🏥", premium:true  },
+  { name:"Pet Spa Pueblo Libre",      type:"Estética canina",      area:"Pueblo Libre", disc:"Baño y corte gratis (1ra vez)",     pts:150, ic:"🛁", premium:false },
+  { name:"Lab Animales Sano",         type:"Laboratorio",          area:"Jesús María",  disc:"30% en análisis sanguíneos",        pts:120, ic:"🧪", premium:false },
+  { name:"PetShop Patitas",           type:"Pet shop aliado",      area:"Barranco",     disc:"10% en alimento premium",           pts:80,  ic:"🛒", premium:false },
+  { name:"Clínica Veterinaria 24/7",  type:"Emergencias",          area:"Surquillo",    disc:"S/. 30 dcto. en consulta urgente",  pts:200, ic:"🚑", premium:false },
 ];
 
 /* =====================================================================
@@ -1068,6 +1075,8 @@ function openSideMenu(){
     </div>
     <div class="items">
       ${adminBtn}
+      <button data-go="subscription" style="background:linear-gradient(90deg,#FFF7D6,#FFE680);font-weight:700"><span class="ic" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff">⭐</span>${isPremium(u)?"Mi Suscripción Premium":"Hazte Premium"}</button>
+      <div class="sep"></div>
       <button data-go="map"><span class="ic">🗺️</span>Mapa interactivo</button>
       <button data-go="missions"><span class="ic">🎯</span>Misiones del día</button>
       <button data-go="campaigns"><span class="ic">📣</span>Campañas comunitarias</button>
@@ -1133,6 +1142,10 @@ function renderScreen(screen, params={}){
     case "donations":     return scrDonations();
     case "campaigns":     return scrCampaigns();
     case "missions":      return scrMissions();
+    case "subscription":  return scrSubscription();
+    case "payment":       return scrPayment(params);
+    case "caseDetail":    return scrCaseDetail(params);
+    case "solicitudDetail":return scrSolicitudDetail(params);
     default:              return scrLogin();
   }
 }
@@ -1187,6 +1200,261 @@ function scrMissions(){
   $$("[data-mgo]", view).forEach(b => b.onclick = ()=> go(b.dataset.mgo));
 }
 
+/* ============= SUSCRIPCIÓN PREMIUM (2 planes según perfil) ============= */
+function scrSubscription(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const u = currentUser();
+  const isOrg = u.role === "albergue";
+  const active = u.subscription === "active";
+  const price = isOrg ? "49.99" : "8.99";
+  const benefits = isOrg ? [
+    {ic:"🥇", t:"Aparece primero en búsquedas", s:"Tu organización se promociona arriba de los resultados"},
+    {ic:"📊", t:"Panel de analítica comercial", s:"ROI, clientes captados, cupones, conversiones"},
+    {ic:"📣", t:"Publica campañas ilimitadas", s:"Vacunación, esterilización, adopción"},
+    {ic:"🎟️", t:"Cupones promocionales ilimitados", s:"Atrae más clientes con descuentos canjeables"},
+    {ic:"💎", t:"Badge ⭐ Premium en tu perfil", s:"Genera confianza ante adoptantes"},
+  ] : [
+    {ic:"⭐", t:"Estrella dorada al lado de tu nombre", s:"Otros usuarios te ven como Protector Premium"},
+    {ic:"🎨", t:"Nombre en color dorado", s:"Tu nombre destaca en chats, ranking y reportes"},
+    {ic:"🏅", t:"Badge especial 'Aliado Premium'", s:"Reconocimiento visible en tu perfil"},
+    {ic:"🎁", t:"Acceso anticipado a beneficios", s:"Veterinarias y pet shops aliados primero"},
+    {ic:"💖", t:"Apoyas a la plataforma", s:"Tu suscripción financia la operación"},
+  ];
+
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> ⭐ Suscripción</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,#FFD700,#FFA500);border-color:#FFA500;color:#fff">
+        <div class="avatar" style="background:rgba(255,255,255,.25);color:#fff;font-size:30px">⭐</div>
+        <div class="meta">
+          <p class="t" style="color:#fff">${isOrg?'Plan Premium Active (B2B)':'Aliado Premium (Cosmético)'}</p>
+          <p class="s" style="color:rgba(255,255,255,.9)">${isOrg?'Para Albergues, Veterinarias, Pet Shops y Empresas':'Apoya la plataforma y destaca tu participación'}</p>
+        </div>
+      </div>
+
+      ${active?`<div class="card mt12" style="background:#defaee;border-color:#10B981">
+        <div class="avatar" style="background:#fff;color:#10B981;font-size:24px">✓</div>
+        <div class="meta"><p class="t" style="color:#147346">Suscripción activa</p><p class="s">Renueva automáticamente cada mes</p></div>
+      </div>`:''}
+
+      <h3 class="section">Beneficios incluidos</h3>
+      ${benefits.map(b=>`
+        <div class="card mt8">
+          <div class="avatar" style="background:var(--accent-light);font-size:22px">${b.ic}</div>
+          <div class="meta"><p class="t">${b.t}</p><p class="s">${b.s}</p></div>
+        </div>`).join("")}
+
+      <div class="card mt16" style="background:var(--brand-light);border-color:var(--brand);flex-direction:column;text-align:center;padding:20px">
+        <div style="font-size:13px;color:var(--brand);font-weight:700">Precio mensual</div>
+        <div style="font-size:38px;font-weight:800;color:var(--ink);margin:4px 0">S/. ${price}</div>
+        <div class="small" style="color:var(--muted)">Cancela cuando quieras · Sin permanencia</div>
+      </div>
+      ${active?`
+        <button class="btn ghost mt12" id="cancel" style="color:var(--red);border-color:var(--red)">Cancelar suscripción</button>
+      `:`
+        <button class="btn accent mt12" id="subscribe">Suscribirme · S/. ${price}/mes</button>
+        <div class="small center mt8">💳 Pago seguro · Powered by Niubiz Demo</div>
+      `}
+    </div>`;
+
+  $("#b").onclick = back;
+  $("#subscribe")?.addEventListener("click", ()=> go("payment",{type:isOrg?"org":"person", amount:price}));
+  $("#cancel")?.addEventListener("click", ()=>{
+    if(!confirm("¿Cancelar tu suscripción Premium?")) return;
+    updateUser({subscription:null});
+    toast("Suscripción cancelada");
+    scrSubscription();
+  });
+}
+
+/* ============= PORTAL DE PAGOS PROTOTIPO ============= */
+function scrPayment({type="person", amount="8.99"}={}){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 💳 Pago seguro</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,#1A1F36,#2D3450);border-color:#1A1F36;color:#fff">
+        <div class="avatar" style="background:rgba(255,255,255,.15);color:#fff">💳</div>
+        <div class="meta">
+          <p class="t" style="color:#fff">PawShot ${type==="org"?"Premium Active":"Aliado Premium"}</p>
+          <p class="s" style="color:rgba(255,255,255,.85)">Suscripción mensual</p>
+        </div>
+        <div style="font-size:24px;font-weight:800;color:#FFD100">S/. ${amount}</div>
+      </div>
+
+      <h3 class="section">Datos de la tarjeta</h3>
+      <div class="label">Número de tarjeta</div>
+      <input class="input" id="cardNum" placeholder="1234 5678 9012 3456" maxlength="19"/>
+      <div class="row mt8">
+        <div>
+          <div class="label mt0">Vencimiento</div>
+          <input class="input" id="cardExp" placeholder="MM/AA" maxlength="5"/>
+        </div>
+        <div>
+          <div class="label mt0">CVV</div>
+          <input class="input" id="cardCvv" placeholder="•••" maxlength="4"/>
+        </div>
+      </div>
+      <div class="label">Titular de la tarjeta</div>
+      <input class="input" id="cardName" placeholder="Como aparece en la tarjeta"/>
+
+      <h3 class="section">Datos de facturación</h3>
+      <div class="label">Documento (DNI/RUC)</div>
+      <input class="input" id="dni" placeholder="12345678"/>
+      <div class="label">Correo de facturación</div>
+      <input class="input" id="email" type="email" value="${currentUser().email}"/>
+
+      <div class="card mt16" style="background:#FEF3C7;border-color:#FCD34D">
+        <div class="avatar" style="background:#fff;font-size:18px">⚠️</div>
+        <div class="meta"><p class="t" style="font-size:13px">Portal demostrativo</p><p class="s">No se realiza ningún cobro real. Solo simulación visual.</p></div>
+      </div>
+
+      <button class="btn mt16" id="pay" style="font-size:15px;padding:15px">🔒 Pagar S/. ${amount} y activar</button>
+      <div class="small center mt8" style="color:var(--muted)">🛡️ Tus datos no se almacenan · Pago 100% encriptado (simulado)</div>
+    </div>`;
+
+  $("#b").onclick = back;
+  $("#cardNum").addEventListener("input", e=>{
+    e.target.value = e.target.value.replace(/\D/g,"").replace(/(.{4})/g,"$1 ").trim();
+  });
+  $("#cardExp").addEventListener("input", e=>{
+    let v = e.target.value.replace(/\D/g,"");
+    if(v.length >= 2) v = v.slice(0,2)+"/"+v.slice(2,4);
+    e.target.value = v;
+  });
+  $("#pay").onclick = ()=>{
+    const num = $("#cardNum").value, exp = $("#cardExp").value, cvv = $("#cardCvv").value, name = $("#cardName").value;
+    if(!num || !exp || !cvv || !name){ toast("Completa todos los datos"); return; }
+    const btn = $("#pay"); btn.disabled = true; btn.textContent = "Procesando pago...";
+    setTimeout(()=>{
+      updateUser({ subscription:"active", subscribedAt: Date.now() });
+      toast("✅ ¡Suscripción activada!");
+      go("subscription");
+    }, 1500);
+  };
+}
+
+/* ============= DETALLE DE CASO (para Albergue desde Actividad) ============= */
+function scrCaseDetail({id, kind="case"}){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const titles = {case:"Caso entrante", sol:"Solicitud de adopción", pub:"Perro publicado"};
+  const t = titles[kind] || "Detalle";
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> ${t}</div></div>
+    <div class="pad">
+      <div class="card" style="border:1.5px solid var(--brand-light)">
+        <div class="avatar" style="background:var(--brand-light);font-size:32px">🐕</div>
+        <div class="meta">
+          <p class="t">${kind==="sol"?"Solicitante: "+(id||"María López"):"Caso #"+Math.floor(3000+Math.random()*999)}</p>
+          <p class="s">📍 ${kind==="sol"?"Solicita adopción de Max":"Av. Brasil, Jesús María"}</p>
+        </div>
+        <span class="badge ${kind==="sol"?"warn":"no"}">${kind==="sol"?"En revisión":"Nuevo"}</span>
+      </div>
+
+      <h3 class="section">Línea de tiempo del caso</h3>
+      <div style="border-left:2px solid var(--brand);padding-left:14px;margin-left:10px">
+        <div style="margin-bottom:14px">
+          <div style="font-weight:700;font-size:13px">📷 Reportado</div>
+          <div class="small">Hace 1 hora · por Ciudadano</div>
+        </div>
+        <div style="margin-bottom:14px;opacity:.5">
+          <div style="font-weight:700;font-size:13px">💧 Recibiendo ayuda</div>
+          <div class="small">Pendiente</div>
+        </div>
+        <div style="margin-bottom:14px;opacity:.5">
+          <div style="font-weight:700;font-size:13px">🚑 Rescate en proceso</div>
+          <div class="small">Pendiente</div>
+        </div>
+        <div style="margin-bottom:14px;opacity:.5">
+          <div style="font-weight:700;font-size:13px">🟢 Rescatado</div>
+          <div class="small">Pendiente</div>
+        </div>
+        <div style="opacity:.5">
+          <div style="font-weight:700;font-size:13px">❤️ Disponible para adopción</div>
+          <div class="small">Pendiente</div>
+        </div>
+      </div>
+
+      <h3 class="section">Información</h3>
+      <div class="row-link"><div class="lt"><div class="ic">🩺</div>Estado de salud</div><div class="rt"><b>Por evaluar</b></div></div>
+      <div class="row-link"><div class="lt"><div class="ic">📏</div>Tamaño aproximado</div><div class="rt"><b>Mediano</b></div></div>
+      <div class="row-link"><div class="lt"><div class="ic">👤</div>Reportante</div><div class="rt"><b>${kind==="sol"?"-":"Ciudadano"}</b></div></div>
+      <div class="row-link"><div class="lt"><div class="ic">📞</div>Contactar</div><div class="rt">›</div></div>
+
+      ${kind==="sol"?`
+        <h3 class="section">Datos del solicitante</h3>
+        <div class="card"><div class="avatar">👤</div><div class="meta"><p class="t">Experiencia con mascotas</p><p class="s">Sí, ha tenido 2 perros antes</p></div></div>
+        <div class="card mt8"><div class="avatar">🏠</div><div class="meta"><p class="t">Tipo de vivienda</p><p class="s">Casa con jardín · 80m²</p></div></div>
+        <div class="card mt8"><div class="avatar">💼</div><div class="meta"><p class="t">Horario disponible</p><p class="s">4-6h diarias para el perro</p></div></div>
+      `:''}
+
+      <div class="row mt16">
+        <button class="btn ghost" id="reject" style="color:var(--red);border-color:var(--red)">${kind==="sol"?"Rechazar":"Descartar caso"}</button>
+        <button class="btn accent" id="accept">${kind==="sol"?"Aprobar adopción":"Tomar caso"}</button>
+      </div>
+    </div>`;
+  $("#b").onclick = back;
+  $("#accept").onclick = ()=>{ toast(kind==="sol"?"✅ Adopción aprobada":"✅ Caso tomado · +50 pts"); back(); };
+  $("#reject").onclick = ()=>{ toast(kind==="sol"?"Solicitud rechazada":"Caso descartado"); back(); };
+}
+
+/* ============= DETALLE DE SOLICITUD (para Adoptante ver estado) ============= */
+function scrSolicitudDetail({id, dogName="Max"}){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Mi solicitud · ${dogName}</div></div>
+    <div class="pad">
+      <div class="card" style="border:1.5px solid var(--brand-light)">
+        <div class="avatar" style="background:var(--brand-light);font-size:32px">🐕</div>
+        <div class="meta">
+          <p class="t">${dogName}</p>
+          <p class="s">Albergue Patitas Felices</p>
+        </div>
+        <span class="badge warn">⏳ En revisión</span>
+      </div>
+
+      <h3 class="section">Estado de tu solicitud</h3>
+      <div style="border-left:2px solid var(--brand);padding-left:14px;margin-left:10px">
+        <div style="margin-bottom:14px">
+          <div style="font-weight:700;font-size:13.5px;color:var(--brand)">✅ Solicitud enviada</div>
+          <div class="small">Hace 2 días · Recibida correctamente</div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-weight:700;font-size:13.5px;color:var(--brand)">📋 Revisión del formulario</div>
+          <div class="small">Hace 1 día · Albergue verificó tus datos</div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-weight:700;font-size:13.5px;color:var(--accent-dark)">⏳ Entrevista pendiente</div>
+          <div class="small"><b>Estás aquí</b> · Albergue te contactará pronto</div>
+        </div>
+        <div style="margin-bottom:14px;opacity:.4">
+          <div style="font-weight:700;font-size:13.5px">🏠 Visita de verificación</div>
+          <div class="small">Pendiente</div>
+        </div>
+        <div style="opacity:.4">
+          <div style="font-weight:700;font-size:13.5px">🎉 Adopción aprobada</div>
+          <div class="small">Pendiente</div>
+        </div>
+      </div>
+
+      <h3 class="section">Mensaje del albergue</h3>
+      <div class="card" style="background:var(--brand-light);border-color:var(--brand)">
+        <div class="avatar" style="background:#fff;color:var(--brand)">💬</div>
+        <div class="meta"><p class="t">Hola María, gracias por tu solicitud.</p><p class="s">Te contactaremos en las próximas 24h para coordinar la entrevista por videollamada.</p></div>
+      </div>
+
+      <button class="btn ghost mt12" id="chat">💬 Abrir chat con el albergue</button>
+      <button class="btn mt8 ghost" id="cancel" style="color:var(--red);border-color:var(--red)">Cancelar solicitud</button>
+    </div>`;
+  $("#b").onclick = back;
+  $("#chat").onclick = ()=> go("chat", {name:"Albergue Patitas Felices", dog:dogName});
+  $("#cancel").onclick = ()=>{ if(confirm("¿Cancelar tu solicitud?")){ toast("Solicitud cancelada"); back(); } };
+}
+
 /* ============= INSIGNIAS ============= */
 function scrBadges(){
   if(!currentUser()) return go("login");
@@ -1200,7 +1468,8 @@ function scrBadges(){
         <div class="meta"><p class="t">Logros desbloqueados</p><p class="s">Acumula acciones reales para obtener nuevas insignias</p></div>
       </div>
       ${BADGES.map((b,i)=>{
-        const unlocked = i < 2;
+        const userBadges = u.badges || {};
+        const unlocked = (b.id==="donante" && userBadges.donante>0) || (b.id==="primer_rescate") || (b.id==="protector_activo");
         return `
         <div class="card mt8" style="opacity:${unlocked?'1':'.6'}">
           <div class="avatar" style="background:${unlocked?'var(--accent-light)':'#EEF2F7'};color:${unlocked?'var(--ink)':'#aaa'};font-size:28px">${b.ic}</div>
@@ -1208,6 +1477,7 @@ function scrBadges(){
             <p class="t">${b.name} ${unlocked?'<span class="badge ok">Desbloqueada</span>':'<span class="badge">🔒</span>'}</p>
             <p class="s">${b.desc}</p>
             ${unlocked?'':`<div class="progress mt8"><div style="width:${(i-2)*20+30}%;background:var(--brand)"></div></div>`}
+            ${b.id==="donante" && userBadges.donante>0 ? `<div class="small mt8" style="color:var(--brand)">Donaste S/. ${userBadges.donatedTotal||0} en total · ${userBadges.donante} ${userBadges.donante===1?'donación':'donaciones'}</div>`:''}
           </div>
         </div>`;
       }).join("")}
@@ -1261,7 +1531,15 @@ function scrDonations(){
     </div>`;
   $("#b").onclick = back;
   $$("[data-amount]", view).forEach(c => c.onclick = ()=>{
-    toast(`Pasarela de pago · S/. ${c.dataset.amount} (demo)`);
+    const amount = c.dataset.amount;
+    const u = currentUser();
+    const badges = u.badges || {};
+    const isFirst = !badges.donante;
+    badges.donante = (badges.donante||0) + 1;
+    badges.donatedTotal = (badges.donatedTotal||0) + Number(amount);
+    updateUser({badges, points: u.points + Math.floor(amount/2)});
+    toast(isFirst ? `🎉 ¡Donación de S/. ${amount}! Ganaste la insignia 💝 Donante Solidario` : `💝 Donación S/. ${amount} registrada · +${Math.floor(amount/2)} pts`);
+    setTimeout(()=> scrDonations(), 800);
   });
 }
 
@@ -1703,22 +1981,46 @@ function scrMap(){
   });
   $("#fab").onclick = ()=>{
     if(role==="admin"){ go("adminPanel"); return; }
-    if(role==="albergue"){ go("publish1"); return; }
+    // Albergue/Organización: ven gestión (no publican perros)
+    if(role==="albergue"){ showFabMenu(role); return; }
     // Protector Animal: menú con opciones
     showFabMenu(role);
   };
 }
 
-/* ============= Action sheet del FAB para Protector ============= */
+/* ============= Action sheet del FAB ============= */
 function showFabMenu(role){
   const existing = $("#fabSheet"); if(existing) existing.remove();
   const sheet = document.createElement("div");
   sheet.id = "fabSheet";
   sheet.style.cssText = "position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:30;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s";
-  sheet.innerHTML = `
-    <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:18px 20px 24px;max-height:60%;overflow-y:auto">
-      <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px"></div>
-      <h3 style="margin:0 0 4px;font-size:17px">¿Qué quieres hacer?</h3>
+
+  let opts;
+  if(role==="albergue"){
+    opts = `
+      <p class="small" style="margin:0 0 14px">Gestión de la organización</p>
+      <div class="card mb0" data-go="activity" style="cursor:pointer;margin-bottom:8px">
+        <div class="avatar" style="background:var(--brand-light);color:var(--brand);font-size:24px">📥</div>
+        <div class="meta"><p class="t">Recibir caso reportado</p><p class="s">Revisa casos entrantes y tómalos</p></div>
+        <span style="color:var(--brand);font-size:18px">›</span>
+      </div>
+      <div class="card mb0" data-go="activity" style="cursor:pointer;margin-bottom:8px">
+        <div class="avatar" style="background:var(--accent-light);color:var(--ink);font-size:24px">📝</div>
+        <div class="meta"><p class="t">Revisar solicitudes de adopción</p><p class="s">Acepta o rechaza adoptantes</p></div>
+        <span style="color:var(--ink);font-size:18px">›</span>
+      </div>
+      <div class="card mb0" data-go="campaigns" style="cursor:pointer;margin-bottom:8px">
+        <div class="avatar" style="background:#FEF3C7;color:#92400E;font-size:24px">🎯</div>
+        <div class="meta"><p class="t">Crear campaña comunitaria</p><p class="s">Adopción, vacunación, esterilización</p></div>
+        <span style="font-size:18px">›</span>
+      </div>
+      <div class="card mb0" data-go="subscription" style="cursor:pointer">
+        <div class="avatar" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;font-size:24px">⭐</div>
+        <div class="meta"><p class="t">Plan Premium Active</p><p class="s">S/. 49.99/mes · Aparece primero en búsquedas</p></div>
+        <span style="font-size:18px">›</span>
+      </div>`;
+  } else {
+    opts = `
       <p class="small" style="margin:0 0 14px">Acciones rápidas como Protector Animal</p>
       <div class="card mb0" data-go="report" style="cursor:pointer;margin-bottom:8px">
         <div class="avatar" style="background:var(--brand-light);color:var(--brand);font-size:24px">📷</div>
@@ -1739,7 +2041,13 @@ function showFabMenu(role){
         <div class="avatar" style="background:#FFF6CC;color:#B45309;font-size:24px">🎯</div>
         <div class="meta"><p class="t">Ver mis misiones</p><p class="s">Cumple acciones y gana PawPoints</p></div>
         <span style="font-size:18px">›</span>
-      </div>
+      </div>`;
+  }
+  sheet.innerHTML = `
+    <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:18px 20px 24px;max-height:75%;overflow-y:auto">
+      <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px"></div>
+      <h3 style="margin:0 0 4px;font-size:17px">¿Qué quieres hacer?</h3>
+      ${opts}
       <button class="btn ghost mt12" id="closeSheet">Cancelar</button>
     </div>`;
   $(".screen").appendChild(sheet);
@@ -2103,26 +2411,26 @@ function scrActivity(){
   if(role==="albergue"){
     if(tab==="cases"){
       list = `
-        <div class="act-card"><div class="ph">🐕</div><div class="info"><p class="t">Perro herido · San Isidro</p><p class="s">Reporte ciudadano · hace 1h</p></div><span class="badge new">Nuevo</span></div>
-        <div class="act-card"><div class="ph">🐩</div><div class="info"><p class="t">Caso Luna · seguimiento</p><p class="s">Ya tomado · hace 2 días</p></div><span class="badge ok">Activo</span></div>
-        <div class="act-card"><div class="ph">🐶</div><div class="info"><p class="t">Caso Max · publicado</p><p class="s">Disponible adopción</p></div><span class="badge info">Listo</span></div>`;
+        <div class="act-card" data-detail="case" data-id="3247" style="cursor:pointer"><div class="ph">🐕</div><div class="info"><p class="t">Perro herido · San Isidro</p><p class="s">Reporte ciudadano · hace 1h</p></div><span class="badge new">Nuevo</span></div>
+        <div class="act-card" data-detail="case" data-id="3201" style="cursor:pointer"><div class="ph">🐩</div><div class="info"><p class="t">Caso Luna · seguimiento</p><p class="s">Ya tomado · hace 2 días</p></div><span class="badge ok">Activo</span></div>
+        <div class="act-card" data-detail="case" data-id="3120" style="cursor:pointer"><div class="ph">🐶</div><div class="info"><p class="t">Caso Max · publicado</p><p class="s">Disponible adopción</p></div><span class="badge info">Listo</span></div>`;
     } else if(tab==="sols"){
       list = ["María López","Carlos Ruiz","Ana Torres"].map((n,i)=>`
-        <div class="act-card">
+        <div class="act-card" data-detail="sol" data-id="${n}" style="cursor:pointer">
           <div class="ph">👤</div>
-          <div class="info"><p class="t">${n} → ${DOGS[i].name}</p><p class="s">Recibida hace ${i+1}h</p></div>
-          <div class="actions"><button class="btn ghost small">Rechazar</button><button class="btn small">Aceptar</button></div>
+          <div class="info"><p class="t">${n} → ${DOGS[i].name}</p><p class="s">Recibida hace ${i+1}h · Toca para ver detalle</p></div>
+          <span class="badge warn">⏳ En revisión</span>
         </div>`).join("");
     } else {
       list = DOGS.filter(d=>d.status==="En adopción").map(d=>`
-        <div class="act-card"><div class="ph">${d.img}</div><div class="info"><p class="t">${d.name}</p><p class="s">${d.district}</p></div><span class="badge ok">Activo</span></div>`).join("");
+        <div class="act-card" data-detail="pub" data-id="${d.id}" style="cursor:pointer"><div class="ph">${d.img}</div><div class="info"><p class="t">${d.name}</p><p class="s">${d.district}</p></div><span class="badge ok">Activo</span></div>`).join("");
     }
   } else {
     if(tab==="sols"){
       list = `
-        <div class="act-card"><div class="ph">🐕</div><div class="info"><p class="t">Max · Albergue Patitas</p><p class="s">15 May</p></div><span class="badge warn">En revisión</span></div>
-        <div class="act-card"><div class="ph">🐩</div><div class="info"><p class="t">Luna · Albergue Esperanza</p><p class="s">12 May</p></div><span class="badge ok">Aceptada</span></div>
-        <div class="act-card"><div class="ph">🐶</div><div class="info"><p class="t">Rocky · Albergue Patitas</p><p class="s">10 May</p></div><span class="badge no">Rechazada</span></div>`;
+        <div class="act-card" data-mysol="Max" style="cursor:pointer"><div class="ph">🐕</div><div class="info"><p class="t">Max · Albergue Patitas</p><p class="s">15 May · Ver estado del proceso</p></div><span class="badge warn">⏳ En revisión</span></div>
+        <div class="act-card" data-mysol="Luna" style="cursor:pointer"><div class="ph">🐩</div><div class="info"><p class="t">Luna · Albergue Esperanza</p><p class="s">12 May · Ver estado del proceso</p></div><span class="badge ok">✅ Aceptada</span></div>
+        <div class="act-card" data-mysol="Rocky" style="cursor:pointer"><div class="ph">🐶</div><div class="info"><p class="t">Rocky · Albergue Patitas</p><p class="s">10 May · Ver motivo</p></div><span class="badge no">❌ Rechazada</span></div>`;
     } else if(tab==="adop"){
       list = `
         <div class="act-card"><div class="ph">🐩</div><div class="info"><p class="t">Luna</p><p class="s">Adoptada hace 2 meses</p></div><button class="btn small" id="ev">Subir evidencia</button></div>`;
@@ -2142,6 +2450,10 @@ function scrActivity(){
   $("#ev")?.addEventListener("click",()=>go("evidence"));
   $("#openChat")?.addEventListener("click",()=>go("chat",{}));
   $("#openChat2")?.addEventListener("click",()=>go("chat",{name:"Albergue Esperanza", dog:"Luna"}));
+  // Detalle de caso/solicitud para Albergue
+  $$("[data-detail]", view).forEach(c => c.onclick = ()=> go("caseDetail",{kind:c.dataset.detail, id:c.dataset.id}));
+  // Mis solicitudes (Protector) — ver estado
+  $$("[data-mysol]", view).forEach(c => c.onclick = ()=> go("solicitudDetail",{dogName:c.dataset.mysol}));
 }
 
 /* ============= Evidence ============= */
@@ -2265,7 +2577,8 @@ function scrVetDiscounts(){
       </div>
       <h3 class="section">Disponibles cerca de ti</h3>
       ${VETS.map(v=>`
-        <div class="vet-card">
+        <div class="vet-card" ${v.premium?'style="border:1.5px solid #FFD700;background:linear-gradient(180deg,#FFFDF0,#fff)"':''}>
+          ${v.premium?'<div style="background:linear-gradient(90deg,#FFD700,#FFA500);color:#fff;padding:4px 10px;border-radius:6px;font-size:10.5px;font-weight:700;display:inline-block;margin-bottom:8px">⭐ PROMOCIONADO · ALIADO PREMIUM</div>':''}
           <div class="head">
             <div class="av">${v.ic}</div>
             <div class="info"><p class="t">${v.name}</p><p class="s">${v.type} · ${v.area}</p></div>
@@ -2337,11 +2650,13 @@ function scrProfile(){
   if(!currentUser()) return go("login");
   showNav("profile"); view.classList.remove("dark");
   const u = currentUser();
+  const premiumBadge = isPremium(u) ? `<div style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;margin-top:4px">⭐ ${u.role==="albergue"?"Premium Active":"Aliado Premium"}</div>` : '';
   view.innerHTML = `
     <div class="profile-head">
       <div class="avatar">${ROLES[u.role].icon}</div>
-      <div class="name">${u.name}</div>
+      <div class="name" style="${isPremium(u)&&u.role!=='albergue'?'color:#FFD700':''}">${u.name} ${isPremium(u)?'<span style="color:#FFD700">⭐</span>':''}</div>
       <div class="role">${ROLES[u.role].label} · ${u.level||"Nivel 1"}</div>
+      ${premiumBadge}
     </div>
     <div class="stats">
       <div class="s"><div class="n">${Math.floor(u.points/40)}</div><div class="l">Reportes</div></div>
@@ -2353,6 +2668,7 @@ function scrProfile(){
       ${u.role==="admin" ? '<div class="row-link" data-act="adminPanel"><div class="lt"><div class="ic" style="background:#fff3b0;color:#8a5a00">👑</div>Panel de Administración</div><div class="rt"><span class="badge new">Admin</span> ›</div></div>' : ''}
       <div class="row-link" data-act="settings"><div class="lt"><div class="ic">👤</div>Mis datos</div><div class="rt">›</div></div>
       <div class="row-link" data-act="points"><div class="lt"><div class="ic">🏆</div>Mis PawPoints</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="subscription"><div class="lt"><div class="ic" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff">⭐</div>${isPremium(u)?"Mi Suscripción Premium":"Hazte Premium · S/. "+(u.role==="albergue"?"49.99":"8.99")}</div><div class="rt">${isPremium(u)?'<span class="badge ok">Activa</span>':'<span class="badge new">¡Nuevo!</span>'} ›</div></div>
       <div class="row-link" data-act="missions"><div class="lt"><div class="ic" style="background:var(--accent-light)">🎯</div>Misiones del día</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
       <div class="row-link" data-act="badges"><div class="lt"><div class="ic" style="background:var(--accent-light)">🏅</div>Mis Insignias</div><div class="rt">›</div></div>
       <div class="row-link" data-act="certifs"><div class="lt"><div class="ic">📜</div>Certificados de Voluntariado</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
