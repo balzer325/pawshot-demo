@@ -491,16 +491,18 @@
   .hazard-item{
     background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;
   }
-  .hazard-item .row1{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+  .hazard-item .row1{
+    display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;margin-bottom:8px;
+  }
   .hazard-item .row1 .ic{
-    flex:0 0 48px;width:48px !important;height:48px !important;border-radius:50% !important;
+    width:48px;height:48px;border-radius:50%;
     background:#fff4d6;color:#8a5a00;display:flex;align-items:center;justify-content:center;
-    font-size:22px;line-height:1;align-self:flex-start;overflow:hidden;
+    font-size:22px;line-height:1;overflow:hidden;
   }
   .hazard-item .row1 .ic.crit{background:#fde7e4;color:#a52a1d}
   .hazard-item .row1 .ic.med{background:#fff4d6;color:#8a5a00}
   .hazard-item .row1 .ic.info{background:#e7eefa;color:#1d4a8c}
-  .hazard-item .row1 .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .hazard-item .row1 .info{min-width:0;display:flex;flex-direction:column;gap:2px}
   .hazard-item .row1 .info .t{font-weight:700;font-size:13.5px;margin:0;line-height:1.3}
   .hazard-item .row1 .info .loc{font-size:11.5px;color:var(--muted);margin:0;line-height:1.3}
   .hazard-item .meta-row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);margin-top:8px}
@@ -623,9 +625,22 @@ const ORG_TYPES = {
 
 const SEED_USERS = [
   { email:"sebateri@gmail.com", pass:"admin2026", name:"Sebastián (Admin)",          role:"admin",     district:"Lima",         points:99999, level:"Administrador",         plan:"admin"   },
+  // Protectores Animales (ciudadanos/adoptantes)
   { email:"maria@demo.com",     pass:"1234",      name:"María Pérez",                role:"ciudadano", district:"Jesús María",  points:1250,  level:"Protector Nivel 5",     plan:null     },
   { email:"juan@demo.com",      pass:"1234",      name:"Juan López",                 role:"adoptante", district:"Miraflores",   points:420,   level:"Protector Nivel 2",     plan:null     },
-  { email:"albergue@demo.com",  pass:"1234",      name:"Albergue Patitas Felices",   role:"albergue",  district:"San Isidro",   points:5680,  level:"Aliado Premium Nivel 4",plan:"premium", orgType:"albergue"},
+  { email:"carlos@demo.com",    pass:"1234",      name:"Carlos Ruiz",                role:"ciudadano", district:"Barranco",     points:890,   level:"Protector Nivel 3",     plan:null     },
+  { email:"ana@demo.com",       pass:"1234",      name:"Ana Torres",                 role:"adoptante", district:"Surco",        points:2150,  level:"Protector Nivel 6",     plan:null     },
+  { email:"lucas@demo.com",     pass:"1234",      name:"Lucas Vega",                 role:"ciudadano", district:"Pueblo Libre", points:340,   level:"Protector Nivel 1",     plan:null     },
+  { email:"elena@demo.com",     pass:"1234",      name:"Elena Castro",               role:"ciudadano", district:"San Borja",    points:1680,  level:"Protector Nivel 5",     plan:null     },
+  { email:"diego@demo.com",     pass:"1234",      name:"Diego Salas",                role:"adoptante", district:"Lince",        points:520,   level:"Protector Nivel 2",     plan:null     },
+  { email:"sofia@demo.com",     pass:"1234",      name:"Sofía Mendoza",              role:"ciudadano", district:"Surquillo",    points:780,   level:"Protector Nivel 3",     plan:null     },
+  // Organizaciones Aliadas
+  { email:"albergue@demo.com",     pass:"1234",   name:"Albergue Patitas Felices",   role:"albergue",  district:"San Isidro",   points:5680,  level:"Aliado Premium Nivel 4",plan:"premium",      subscription:"active", orgType:"albergue"},
+  { email:"esperanza@demo.com",    pass:"1234",   name:"Albergue Esperanza",         role:"albergue",  district:"Surquillo",    points:3420,  level:"Aliado Verificado Nivel 2", plan:null,       orgType:"albergue"},
+  { email:"limasur@demo.com",      pass:"1234",   name:"Refugio Lima Sur",           role:"albergue",  district:"Surco",        points:1980,  level:"Aliado Verificado Nivel 1", plan:null,       orgType:"albergue"},
+  { email:"vetcare@demo.com",      pass:"1234",   name:"VetCare San Isidro",         role:"albergue",  district:"San Isidro",   points:2840,  level:"Veterinaria Premium",     plan:"premium",  subscription:"active", orgType:"veterinaria"},
+  { email:"animaliada@demo.com",   pass:"1234",   name:"Clínica Animaliada",         role:"albergue",  district:"Miraflores",   points:1560,  level:"Veterinaria Premium",     plan:"premium",  subscription:"active", orgType:"veterinaria"},
+  { email:"petshop@demo.com",      pass:"1234",   name:"PetShop Patitas",            role:"albergue",  district:"Barranco",     points:920,   level:"Pet Shop Aliado",         plan:null,       orgType:"petshop"},
 ];
 
 /* Coordenadas de distritos de Lima (lat, lng) */
@@ -655,10 +670,20 @@ function saveState(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
 let state = loadState();
 
 let DOGS = [
-  { id:1, name:"Max",  lat:-12.0719, lng:-77.0498, district:"Jesús María", status:"Reportado",     age:"Adulto", sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕",       desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true,  publishedBy:"Albergue Patitas Felices" },
-  { id:2, name:"Luna", lat:-12.1196, lng:-77.0367, district:"Miraflores",  status:"En adopción",   age:"2 años", sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", desc:"Luna es una perrita cariñosa, juguetona y muy noble. Se lleva bien con personas y otros perros.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Rescatista temporal" },
-  { id:3, name:"Rocky",lat:-12.1395, lng:-77.0228, district:"Barranco",    status:"En seguimiento",age:"1 año",  sex:"Macho",  size:"Pequeño", health:["Herido"], img:"🐶", desc:"Estaba cerca del puente de los suspiros, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Puente de los Suspiros, Barranco", caseId:"#3258", verified:false, publishedBy:"Ciudadano" },
-  { id:4, name:"Coco", lat:-12.0750, lng:-77.0540, district:"Jesús María", status:"En adopción",   age:"3 años", sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Av. Salaverry, Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:1, name:"Max",      lat:-12.0719, lng:-77.0498, district:"Jesús María", status:"Reportado",     age:"Adulto",    sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕",       desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true,  publishedBy:"Albergue Patitas Felices" },
+  { id:2, name:"Luna",     lat:-12.1196, lng:-77.0367, district:"Miraflores",  status:"En adopción",   age:"2 años",    sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", desc:"Luna es cariñosa, juguetona y muy noble.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Albergue Esperanza" },
+  { id:3, name:"Rocky",    lat:-12.1395, lng:-77.0228, district:"Barranco",    status:"En seguimiento",age:"1 año",     sex:"Macho",  size:"Pequeño", health:["Herido"], img:"🐶", desc:"Estaba cerca del puente, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Puente de los Suspiros, Barranco", caseId:"#3258", verified:false, publishedBy:"Carlos Ruiz" },
+  { id:4, name:"Coco",     lat:-12.0750, lng:-77.0540, district:"Jesús María", status:"En adopción",   age:"3 años",    sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Av. Salaverry, Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:5, name:"Bella",    lat:-12.1086, lng:-77.0006, district:"San Borja",   status:"Reportado",     age:"6 meses",   sex:"Hembra", size:"Pequeño", health:["Desnutrido"], img:"🐕", desc:"Cachorra muy delgada, parece perdida en la zona del parque.", reportedAt:"hace 1 hora", location:"Parque de la Felicidad, San Borja", caseId:"#3289", verified:false, publishedBy:"Elena Castro" },
+  { id:6, name:"Toby",     lat:-12.0855, lng:-77.0339, district:"Lince",       status:"En adopción",   age:"4 años",    sex:"Macho",  size:"Mediano", health:["Vacunado","Esterilizado"], img:"🐶", desc:"Cariñoso, juguetón. Listo para una familia activa.", reportedAt:"hace 5 días", location:"Av. Petit Thouars, Lince", caseId:"#3105", verified:true, publishedBy:"Refugio Lima Sur" },
+  { id:7, name:"Milo",     lat:-12.1356, lng:-76.9931, district:"Surco",       status:"Rescatado",     age:"2 años",    sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕", desc:"Rescatado de una calle peligrosa. Ahora en albergue.", reportedAt:"ayer", location:"Av. Tomás Marsano, Surco", caseId:"#3210", verified:true, publishedBy:"Ana Torres" },
+  { id:8, name:"Nala",     lat:-12.0768, lng:-77.0635, district:"Pueblo Libre",status:"Reportado",     age:"3 años",    sex:"Hembra", size:"Mediano", health:["Herido","Urgente"], img:"🐩", desc:"Lastimada en una pata. Urge atención veterinaria.", reportedAt:"hace 30 min", location:"Av. Sucre, Pueblo Libre", caseId:"#3290", verified:false, publishedBy:"Lucas Vega" },
+  { id:9, name:"Simba",    lat:-12.1167, lng:-77.0167, district:"Surquillo",   status:"En adopción",   age:"5 años",    sex:"Macho",  size:"Grande",  health:["Vacunado","Esterilizado","Saludable"], img:"🐕‍🦺", desc:"Perro maduro y tranquilo. Ideal para hogar sin niños pequeños.", reportedAt:"hace 1 semana", location:"Av. Angamos, Surquillo", caseId:"#3080", verified:true, publishedBy:"Albergue Esperanza" },
+  { id:10, name:"Lola",    lat:-12.1075, lng:-77.0357, district:"San Isidro",  status:"En adopción",   age:"1 año",     sex:"Hembra", size:"Pequeño", health:["Vacunado","Saludable"], img:"🐩", desc:"Cachorra juguetona, ideal para departamento.", reportedAt:"hace 4 días", location:"Parque El Olivar, San Isidro", caseId:"#3155", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:11, name:"Zeus",    lat:-12.0464, lng:-77.0428, district:"Lima",        status:"Reportado",     age:"Adulto",    sex:"Macho",  size:"Grande",  health:["Urgente"], img:"🐕", desc:"Posible caso de maltrato. Necesita rescate inmediato.", reportedAt:"hace 2 horas", location:"Centro de Lima", caseId:"#3295", verified:false, publishedBy:"Sofía Mendoza" },
+  { id:12, name:"Bruno",   lat:-12.1300, lng:-77.0250, district:"Barranco",    status:"En seguimiento",age:"6 meses",   sex:"Macho",  size:"Pequeño", health:["Saludable"], img:"🐶", desc:"Cachorrito en seguimiento por rescatista temporal.", reportedAt:"hace 1 día", location:"Av. Grau, Barranco", caseId:"#3245", verified:true, publishedBy:"Carlos Ruiz" },
+  { id:13, name:"Lucky",   lat:-12.1196, lng:-77.0400, district:"Miraflores",  status:"Adoptado",      age:"3 años",    sex:"Macho",  size:"Mediano", health:["Vacunado","Esterilizado"], img:"🐕‍🦺", desc:"¡Encontró hogar! Adoptado por familia López.", reportedAt:"hace 1 mes", location:"Miraflores", caseId:"#3050", verified:true, publishedBy:"Juan López" },
+  { id:14, name:"Negra",   lat:-12.0900, lng:-77.0500, district:"Lince",       status:"Reportado",     age:"Adulto",    sex:"Hembra", size:"Mediano", health:["Saludable"], img:"🐕", desc:"Camina sola por la zona desde hace varios días.", reportedAt:"hace 4 horas", location:"Av. Arenales, Lince", caseId:"#3291", verified:false, publishedBy:"Diego Salas" },
 ];
 
 const NOTIF = [
@@ -724,8 +749,8 @@ const DONATION_OPTIONS = [
   { amount:100, desc:"Kit completo para perro rescatado" },
 ];
 
-/* ============= SISTEMA DE MISIONES con cooldown ============= */
-const MISSIONS = [
+/* ============= SISTEMA DE MISIONES con cooldown (separadas por rol) ============= */
+const MISSIONS_PROTECTOR = [
   { id:"report",   ic:"📷", title:"Reportar perro callejero",     desc:"Sube una foto de un perro en situación de riesgo.", pts:20, cooldownH:1,   target:5,  goto:"report",     cta:"Reportar ahora" },
   { id:"confirm",  ic:"👍", title:"Confirmar zona de riesgo",      desc:"Valida un peligro reportado por la comunidad.",     pts:5,  cooldownH:0.5, target:10, goto:"hazards",    cta:"Ver peligros" },
   { id:"share",    ic:"📲", title:"Compartir un caso",             desc:"Difunde un caso para que llegue a más gente.",      pts:10, cooldownH:6,   target:3,  goto:"map",        cta:"Buscar caso" },
@@ -733,6 +758,22 @@ const MISSIONS = [
   { id:"campaign", ic:"🎯", title:"Unirse a campaña comunitaria",  desc:"Inscríbete a una campaña activa.",                  pts:30, cooldownH:24,  target:2,  goto:"campaigns",  cta:"Ver campañas" },
   { id:"daily",    ic:"🌅", title:"Visita diaria",                 desc:"Solo entra a la app cada día. Es automática.",      pts:5,  cooldownH:20,  target:30, goto:null,         cta:"Automática" },
 ];
+
+const MISSIONS_ORG = [
+  { id:"take_case",   ic:"📥", title:"Tomar caso entrante",            desc:"Recibe un caso reportado por un ciudadano.",        pts:50,  cooldownH:0.5, target:10, goto:"activity",        cta:"Ver casos" },
+  { id:"approve_adop",ic:"❤️", title:"Aprobar adopción",                desc:"Revisa solicitudes y aprueba una adopción.",         pts:80,  cooldownH:2,   target:5,  goto:"activity",        cta:"Ver solicitudes" },
+  { id:"emit_cert",   ic:"📜", title:"Emitir certificado a voluntario", desc:"Reconoce el trabajo de un Protector Animal.",       pts:40,  cooldownH:1,   target:8,  goto:"certifs",         cta:"Emitir cert" },
+  { id:"create_camp", ic:"📣", title:"Crear campaña comunitaria",       desc:"Vacunación, esterilización, adopción o rescate.",   pts:100, cooldownH:24,  target:3,  goto:"createCampaign",  cta:"Crear campaña" },
+  { id:"create_miss", ic:"🎯", title:"Crear misión personalizada",      desc:"Diseña una misión para tus voluntarios.",            pts:60,  cooldownH:12,  target:5,  goto:"createMission",   cta:"Crear misión" },
+  { id:"update_case", ic:"🔄", title:"Actualizar estado de caso",       desc:"Mantén actualizado el estado de un caso activo.",   pts:20,  cooldownH:1,   target:15, goto:"activity",        cta:"Actualizar" },
+  { id:"daily",       ic:"🌅", title:"Visita diaria",                   desc:"Solo entra a la app cada día. Es automática.",       pts:5,   cooldownH:20,  target:30, goto:null,              cta:"Automática" },
+];
+
+function activeMissions(){
+  const u = currentUser();
+  return (u && u.role==="albergue") ? MISSIONS_ORG : MISSIONS_PROTECTOR;
+}
+const MISSIONS = [...MISSIONS_PROTECTOR, ...MISSIONS_ORG.filter(m=>!MISSIONS_PROTECTOR.find(p=>p.id===m.id))];
 
 function missionStatus(missionId){
   const u = currentUser(); if(!u) return null;
@@ -907,26 +948,33 @@ const store = {
   },
 };
 
-/* ---- Seed DB if empty (primera vez) ---- */
+/* ---- Seed DB (agrega faltantes sin borrar existentes) ---- */
 async function seedIfEmpty(){
   if(!fbReady) return;
+  // Usuarios: agregar los que falten
   const usersSnap = await fbDB.ref("users").once("value");
-  if(!usersSnap.exists()){
-    console.log("🌱 Sembrando usuarios demo...");
-    for(const u of SEED_USERS){
+  const existingEmails = new Set(Object.values(usersSnap.val() || {}).map(u=>u.email));
+  for(const u of SEED_USERS){
+    if(!existingEmails.has(u.email)){
       await fbDB.ref("users/" + emailKey(u.email)).set({...u, createdAt: Date.now()});
+      console.log("➕ Usuario añadido:", u.email);
     }
   }
+  // Perros: agregar los que falten (por nombre+distrito como clave)
   const dogsSnap = await fbDB.ref("dogs").once("value");
-  if(!dogsSnap.exists()){
-    for(const d of DOGS){
+  const existingDogs = new Set(Object.values(dogsSnap.val() || {}).map(d=>`${d.name}|${d.district}`));
+  for(const d of DOGS){
+    if(!existingDogs.has(`${d.name}|${d.district}`)){
       const ref = fbDB.ref("dogs").push();
       await ref.set({...d, id: ref.key, createdAt: Date.now()});
+      console.log("🐕 Perro añadido:", d.name);
     }
   }
+  // Peligros: agregar los que falten (por título)
   const hzSnap = await fbDB.ref("hazards").once("value");
-  if(!hzSnap.exists()){
-    for(const h of HAZARDS){
+  const existingHz = new Set(Object.values(hzSnap.val() || {}).map(h=>h.t));
+  for(const h of HAZARDS){
+    if(!existingHz.has(h.t)){
       const ref = fbDB.ref("hazards").push();
       await ref.set({...h, id: ref.key, createdAt: Date.now()});
     }
@@ -1146,6 +1194,9 @@ function renderScreen(screen, params={}){
     case "payment":       return scrPayment(params);
     case "caseDetail":    return scrCaseDetail(params);
     case "solicitudDetail":return scrSolicitudDetail(params);
+    case "createCampaign":return scrCreateCampaign();
+    case "createMission": return scrCreateMission();
+    case "myCreations":   return scrMyCreations();
     default:              return scrLogin();
   }
 }
@@ -1155,14 +1206,15 @@ function scrMissions(){
   if(!currentUser()) return go("login");
   showNav("missions"); view.classList.remove("dark");
   const u = currentUser();
+  const isOrg = u.role === "albergue";
   view.innerHTML = `
-    <div class="top-app-bar"><div class="left">🎯 Misiones del día</div></div>
+    <div class="top-app-bar"><div class="left">🎯 ${isOrg?"Misiones de Albergue":"Misiones del día"}</div></div>
     <div class="pad">
       <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
-        <div class="avatar" style="background:#fff;font-size:28px">🎯</div>
-        <div class="meta"><p class="t">Cumple misiones, gana PawPoints</p><p class="s">Las misiones tienen tiempo de espera para evitar abusos. Solo cuentan acciones reales.</p></div>
+        <div class="avatar" style="background:#fff;font-size:28px">${isOrg?"🏢":"🎯"}</div>
+        <div class="meta"><p class="t">${isOrg?"Acciones para tu organización":"Cumple misiones, gana PawPoints"}</p><p class="s">${isOrg?"Recibe casos, aprueba adopciones, crea campañas y misiones para tu comunidad.":"Las misiones tienen tiempo de espera para evitar abusos. Solo cuentan acciones reales."}</p></div>
       </div>
-      ${MISSIONS.map(m => {
+      ${activeMissions().map(m => {
         const s = missionStatus(m.id);
         const pct = Math.min(100, Math.round((s.count/m.target)*100));
         const canGo = m.goto && s.ready;
@@ -1198,6 +1250,213 @@ function scrMissions(){
       </div>
     </div>`;
   $$("[data-mgo]", view).forEach(b => b.onclick = ()=> go(b.dataset.mgo));
+}
+
+/* ============= CREAR CAMPAÑA (Albergue) ============= */
+function scrCreateCampaign(){
+  if(!currentUser() || currentUser().role !== "albergue"){ toast("Solo organizaciones aliadas"); return go("map"); }
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 📣 Crear campaña</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
+        <div class="avatar" style="background:#fff;font-size:24px">📣</div>
+        <div class="meta"><p class="t">Nueva campaña comunitaria</p><p class="s">Convoca voluntarios y patrocinadores</p></div>
+      </div>
+
+      <div class="label">Tipo de campaña</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="ctype">
+        <span class="chip active">💉 Vacunación</span>
+        <span class="chip">✂️ Esterilización</span>
+        <span class="chip">🏠 Jornada de adopción</span>
+        <span class="chip">🍖 Recolección de alimento</span>
+        <span class="chip">🩺 Salud preventiva</span>
+      </div>
+
+      <div class="label">Nombre de la campaña</div>
+      <input class="input" id="cname" placeholder="Ej. Vacunación gratuita Jesús María"/>
+
+      <div class="label">Descripción</div>
+      <textarea class="textarea" placeholder="Describe el objetivo y actividades..."></textarea>
+
+      <div class="row mt8">
+        <div>
+          <div class="label mt0">Fecha</div>
+          <input class="input" id="cdate" type="date"/>
+        </div>
+        <div>
+          <div class="label mt0">Distrito</div>
+          <select class="select" id="cdist">
+            <option>Jesús María</option><option>Miraflores</option><option>San Isidro</option><option>Barranco</option><option>Surco</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="label">Meta de participantes</div>
+      <input class="input" id="cgoal" type="number" placeholder="100" value="100"/>
+
+      <div class="label">Patrocinador (opcional)</div>
+      <input class="input" id="csponsor" placeholder="Ej. Laboratorios Vet+"/>
+
+      <div class="upload mt12" id="cimg"><span class="ic">📷</span>Imagen de la campaña (opcional)</div>
+
+      <button class="btn accent mt16" id="create">📣 Publicar campaña</button>
+    </div>`;
+  $("#b").onclick = back;
+  attachUploader("#cimg",{max:1,placeholder:"<span class='ic'>📷</span>Imagen de la campaña"});
+  $$("#ctype .chip",view).forEach(c=>c.onclick=()=>{$$("#ctype .chip",view).forEach(x=>x.classList.remove("active"));c.classList.add("active");});
+  $("#create").onclick = ()=>{
+    if(!$("#cname").value){ toast("Ponle un nombre a la campaña"); return; }
+    const m = tryCompleteMission("create_camp");
+    if(m.ok) toast(`✅ Campaña publicada · +${m.pts} pts`);
+    else if(m.reason==="cooldown") toast(`Campaña publicada. Próxima misión en ${fmtCooldown(m.remaining)}`);
+    else toast("Campaña publicada");
+    go("myCreations");
+  };
+}
+
+/* ============= CREAR MISIÓN PERSONALIZADA (Albergue) ============= */
+function scrCreateMission(){
+  if(!currentUser() || currentUser().role !== "albergue"){ toast("Solo organizaciones aliadas"); return go("map"); }
+  hideNav(); view.classList.remove("dark");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🎯 Crear misión</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,var(--brand-light),#B8E5F5);border-color:var(--brand)">
+        <div class="avatar" style="background:#fff;color:var(--brand);font-size:24px">🎯</div>
+        <div class="meta"><p class="t">Misión personalizada</p><p class="s">Diseña una acción para tus voluntarios</p></div>
+      </div>
+
+      <div class="label">Categoría</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="mcat">
+        <span class="chip active">🐕 Rescate</span>
+        <span class="chip">💉 Salud</span>
+        <span class="chip">📚 Educación</span>
+        <span class="chip">🤝 Voluntariado</span>
+      </div>
+
+      <div class="label">Título de la misión</div>
+      <input class="input" id="mname" placeholder="Ej. Pasea perros del albergue"/>
+
+      <div class="label">Descripción</div>
+      <textarea class="textarea" placeholder="Qué debe hacer el voluntario..."></textarea>
+
+      <div class="row mt8">
+        <div>
+          <div class="label mt0">PawPoints a otorgar</div>
+          <input class="input" id="mpts" type="number" value="30"/>
+        </div>
+        <div>
+          <div class="label mt0">Cooldown (horas)</div>
+          <input class="input" id="mcool" type="number" value="24"/>
+        </div>
+      </div>
+
+      <div class="label">Meta (cuántos voluntarios deben cumplirla)</div>
+      <input class="input" id="mtarget" type="number" placeholder="20" value="20"/>
+
+      <div class="label">¿Otorga certificado al completar?</div>
+      <div style="display:flex;gap:6px" id="mcert">
+        <span class="chip active">No</span>
+        <span class="chip">🥉 Bronce</span>
+        <span class="chip">🥈 Plata</span>
+        <span class="chip">🥇 Oro</span>
+      </div>
+
+      <button class="btn mt16" id="create">🎯 Publicar misión</button>
+    </div>`;
+  $("#b").onclick = back;
+  $$("#mcat .chip,#mcert .chip",view).forEach(c=>c.onclick=(e)=>{
+    const parent = e.target.parentElement;
+    $$(".chip",parent).forEach(x=>x.classList.remove("active"));
+    c.classList.add("active");
+  });
+  $("#create").onclick = ()=>{
+    if(!$("#mname").value){ toast("Ponle un título a la misión"); return; }
+    const m = tryCompleteMission("create_miss");
+    if(m.ok) toast(`✅ Misión publicada · +${m.pts} pts`);
+    else if(m.reason==="cooldown") toast(`Misión publicada. Próxima en ${fmtCooldown(m.remaining)}`);
+    else toast("Misión publicada");
+    go("myCreations");
+  };
+}
+
+/* ============= MIS CREACIONES (Albergue monitorea participantes) ============= */
+function scrMyCreations(){
+  if(!currentUser() || currentUser().role !== "albergue"){ toast("Solo organizaciones aliadas"); return go("map"); }
+  hideNav(); view.classList.remove("dark");
+  const tab = state.flow.creationTab || "campaigns";
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 📊 Mis creaciones</div></div>
+    <div class="pad">
+      <div class="tabs">
+        <button class="${tab==='campaigns'?'active':''}" data-t="campaigns">Campañas</button>
+        <button class="${tab==='missions'?'active':''}" data-t="missions">Misiones</button>
+      </div>
+
+      ${tab==='campaigns' ? `
+        <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
+          <div class="avatar" style="background:#fff">📣</div>
+          <div class="meta"><p class="t">4 campañas activas</p><p class="s">504 participantes en total</p></div>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">💉</div>
+          <div class="meta"><p class="t">Vacunación masiva</p><p class="s">📍 Jesús María · 21 dic</p>
+          <div class="progress mt8"><div style="width:71%;background:var(--brand)"></div></div>
+          <div class="small">142/200 participantes · 71%</div></div>
+          <button class="btn small ghost" data-detail="campaign">Ver</button>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">🏠</div>
+          <div class="meta"><p class="t">Jornada de adopción</p><p class="s">📍 Parque Kennedy · 22 dic</p>
+          <div class="progress mt8"><div style="width:78%;background:var(--brand)"></div></div>
+          <div class="small">78/100 participantes · 78%</div></div>
+          <button class="btn small ghost" data-detail="campaign">Ver</button>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">✂️</div>
+          <div class="meta"><p class="t">Esterilización a S/. 30</p><p class="s">📍 Pueblo Libre · 23 dic</p>
+          <div class="progress mt8"><div style="width:68%;background:var(--brand)"></div></div>
+          <div class="small">54/80 participantes · 68%</div></div>
+          <button class="btn small ghost" data-detail="campaign">Ver</button>
+        </div>
+        <button class="btn accent mt16" id="newC">📣 Crear nueva campaña</button>
+      ` : `
+        <div class="card" style="background:linear-gradient(135deg,var(--brand-light),#B8E5F5);border-color:var(--brand)">
+          <div class="avatar" style="background:#fff;color:var(--brand)">🎯</div>
+          <div class="meta"><p class="t">3 misiones personalizadas</p><p class="s">42 voluntarios participando</p></div>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">🐕</div>
+          <div class="meta"><p class="t">Pasea perros del albergue</p><p class="s">+40 pts · Cooldown 24h</p>
+          <div class="progress mt8"><div style="width:60%;background:var(--brand)"></div></div>
+          <div class="small">12/20 cumplidas · 60%</div></div>
+          <button class="btn small ghost" data-detail="mission">Ver</button>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">📚</div>
+          <div class="meta"><p class="t">Difunde adopción responsable</p><p class="s">+30 pts · Cooldown 6h</p>
+          <div class="progress mt8"><div style="width:80%;background:var(--brand)"></div></div>
+          <div class="small">24/30 cumplidas · 80%</div></div>
+          <button class="btn small ghost" data-detail="mission">Ver</button>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">🤝</div>
+          <div class="meta"><p class="t">Acompaña visitas de adopción</p><p class="s">+60 pts · Cooldown 48h</p>
+          <div class="progress mt8"><div style="width:30%;background:var(--brand)"></div></div>
+          <div class="small">6/20 cumplidas · 30%</div></div>
+          <button class="btn small ghost" data-detail="mission">Ver</button>
+        </div>
+        <button class="btn mt16" id="newM">🎯 Crear nueva misión</button>
+      `}
+    </div>`;
+  $("#b").onclick = back;
+  $$("[data-t]", view).forEach(b=>b.onclick = ()=>{ state.flow.creationTab = b.dataset.t; saveState(); scrMyCreations(); });
+  $("#newC")?.addEventListener("click",()=>go("createCampaign"));
+  $("#newM")?.addEventListener("click",()=>go("createMission"));
+  $$("[data-detail]", view).forEach(b=> b.onclick = ()=>{
+    toast("Monitor: 12 participantes activos · 8 completaron · 2 abandonaron");
+  });
 }
 
 /* ============= SUSCRIPCIÓN PREMIUM (2 planes según perfil) ============= */
@@ -1836,7 +2095,7 @@ function scrMap(){
   showNav("map"); view.classList.remove("dark");
   const role = currentUser().role;
   const fabIcon = "+";
-  const fabTitle = role==="admin" ? "Admin" : role==="albergue" ? "Publicar perro" : "Crear caso";
+  const fabTitle = role==="admin" ? "Admin" : role==="albergue" ? "Gestión" : "Crear caso";
 
   const userDistrict = currentUser().district || "Lima";
   const userCoords = DISTRICT_COORDS[userDistrict] || DISTRICT_COORDS["Lima"];
@@ -2009,9 +2268,19 @@ function showFabMenu(role){
         <div class="meta"><p class="t">Revisar solicitudes de adopción</p><p class="s">Acepta o rechaza adoptantes</p></div>
         <span style="color:var(--ink);font-size:18px">›</span>
       </div>
-      <div class="card mb0" data-go="campaigns" style="cursor:pointer;margin-bottom:8px">
-        <div class="avatar" style="background:#FEF3C7;color:#92400E;font-size:24px">🎯</div>
-        <div class="meta"><p class="t">Crear campaña comunitaria</p><p class="s">Adopción, vacunación, esterilización</p></div>
+      <div class="card mb0" data-go="createCampaign" style="cursor:pointer;margin-bottom:8px">
+        <div class="avatar" style="background:#FEF3C7;color:#92400E;font-size:24px">📣</div>
+        <div class="meta"><p class="t">Crear campaña comunitaria</p><p class="s">Vacunación, adopción, esterilización</p></div>
+        <span style="font-size:18px">›</span>
+      </div>
+      <div class="card mb0" data-go="createMission" style="cursor:pointer;margin-bottom:8px">
+        <div class="avatar" style="background:var(--brand-light);color:var(--brand);font-size:24px">🎯</div>
+        <div class="meta"><p class="t">Crear misión personalizada</p><p class="s">Diseña acciones para tus voluntarios</p></div>
+        <span style="font-size:18px">›</span>
+      </div>
+      <div class="card mb0" data-go="myCreations" style="cursor:pointer;margin-bottom:8px">
+        <div class="avatar" style="background:#defaee;color:#147346;font-size:24px">📊</div>
+        <div class="meta"><p class="t">Monitorear participantes</p><p class="s">Ve quién participa en lo que creaste</p></div>
         <span style="font-size:18px">›</span>
       </div>
       <div class="card mb0" data-go="subscription" style="cursor:pointer">
@@ -2534,11 +2803,88 @@ function scrPoints(){
   $("#an")?.addEventListener("click",()=>go("analytics"));
 }
 
-/* ============= Certificates ============= */
+/* ============= Certificates (diferentes según rol) ============= */
 function scrCertifs(){
+  if(!currentUser()) return go("login");
   hideNav(); view.classList.remove("dark");
+  const u = currentUser();
+  const isOrg = u.role === "albergue";
+
+  if(isOrg){
+    view.innerHTML = `
+      <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🏢 Certificaciones de Albergue</div></div>
+      <div class="pad">
+        <div class="card" style="background:linear-gradient(135deg,#FFF6CC,#FFE680);border-color:var(--accent)">
+          <div class="avatar" style="background:#fff;font-size:28px">🏆</div>
+          <div class="meta"><p class="t">Aliado Verificado · Nivel 3</p><p class="s">Reconocimiento por trayectoria y certificados emitidos</p></div>
+        </div>
+
+        <h3 class="section">Tu escala de organización</h3>
+        <div class="cert" style="border-left:6px solid #10B981">
+          <div class="head"><span>✓ ALIADO VERIFICADO</span><span class="badge ok">Activo</span></div>
+          <div class="meta">15 rescates documentados · 8 adopciones completadas</div>
+          <button class="btn ghost" id="dlBasic">📥 Descargar credencial PDF</button>
+        </div>
+        <div class="cert" style="border-left:6px solid var(--accent)">
+          <div class="head"><span>⭐ ALIADO DESTACADO</span><span class="badge ok">Activo</span></div>
+          <div class="meta">50+ rescates · 30+ adopciones · Verificación municipal</div>
+          <div class="progress"><div style="width:78%;background:var(--accent)"></div></div>
+          <div class="small">39/50 adopciones para mantener nivel</div>
+        </div>
+        <div class="cert" style="border-left:6px solid #8B5CF6;opacity:.85">
+          <div class="head"><span>🏛️ ALIADO ESTRATÉGICO</span><span class="lock">🔒 Bloqueado</span></div>
+          <div class="meta">200+ rescates · 100+ adopciones · Validado por gremio</div>
+          <div class="progress"><div style="width:32%;background:#8B5CF6"></div></div>
+          <div class="small">68/200 rescates</div>
+        </div>
+
+        <h3 class="section">📜 Emite certificados a voluntarios</h3>
+        <p class="sub">Reconoce el trabajo de Protectores que apoyaron tu albergue.</p>
+        <div class="card">
+          <div class="avatar">👤</div>
+          <div class="meta"><p class="t">María Pérez</p><p class="s">24h de voluntariado · 5 rescates ayudados</p></div>
+          <button class="btn small accent" data-emit="maria">Emitir 🥉</button>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">👤</div>
+          <div class="meta"><p class="t">Carlos Ruiz</p><p class="s">52h · 12 rescates · Listo para Plata</p></div>
+          <button class="btn small accent" data-emit="carlos">Emitir 🥈</button>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">👤</div>
+          <div class="meta"><p class="t">Ana Torres</p><p class="s">108h · 28 rescates · Listo para Oro</p></div>
+          <button class="btn small accent" data-emit="ana">Emitir 🥇</button>
+        </div>
+
+        <h3 class="section">🏢 Certificar a otros albergues</h3>
+        <p class="sub">Como Aliado Destacado, puedes co-certificar a otras organizaciones.</p>
+        <div class="card">
+          <div class="avatar">🏠</div>
+          <div class="meta"><p class="t">Albergue Esperanza</p><p class="s">Surquillo · 12 meses operando</p></div>
+          <button class="btn small ghost" data-cert-org="esperanza">Co-certificar ✓</button>
+        </div>
+        <div class="card mt8">
+          <div class="avatar">🏠</div>
+          <div class="meta"><p class="t">Refugio Lima Sur</p><p class="s">Surco · 8 meses operando</p></div>
+          <button class="btn small ghost" data-cert-org="lima-sur">Co-certificar ✓</button>
+        </div>
+      </div>`;
+    $("#b").onclick = back;
+    $("#dlBasic").onclick = ()=>toast("Generando credencial PDF...");
+    $$("[data-emit]", view).forEach(b=>b.onclick=()=>{
+      const m = tryCompleteMission("emit_cert");
+      if(m.ok) toast(`✅ Certificado emitido · +${m.pts} pts`);
+      else if(m.reason==="cooldown") toast(`Certificado emitido · Próxima misión en ${fmtCooldown(m.remaining)}`);
+      else toast("Certificado emitido");
+    });
+    $$("[data-cert-org]", view).forEach(b=>b.onclick=()=>{
+      toast("✓ Albergue co-certificado · Verificación enviada al gremio");
+    });
+    return;
+  }
+
   view.innerHTML = `
-    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Mis Certificaciones</div></div>
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 📜 Mis Certificaciones</div></div>
     <div class="pad">
       <p class="sub">Progreso total: <b>24 horas de voluntariado clínico</b></p>
       <div class="cert bronze">
