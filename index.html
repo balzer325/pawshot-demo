@@ -124,8 +124,13 @@
     background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center;
   }
   .card .avatar{
-    width:54px;height:54px;border-radius:14px;background:#f1efeb;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;
+    width:54px;height:54px;border-radius:14px;background:#f1efeb;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;
   }
+  /* Foto real que rellena un contenedor (avatar/hero/act-card), con fallback a emoji */
+  img.imgfill{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+  .dog-hero img.imgfill{position:absolute;inset:0;border-radius:0;z-index:0}
+  .dog-hero .nav{z-index:3}
+  .act-card .ph{overflow:hidden}
   .card .meta{flex:1;min-width:0}
   .card .meta .t{font-weight:700;font-size:14.5px;margin:0}
   .card .meta .s{color:var(--muted);font-size:12.5px;margin:2px 0 0}
@@ -642,6 +647,17 @@ const SEED_USERS = [
   { email:"animaliada@demo.com",   pass:"1234",   name:"Clínica Animaliada",         role:"albergue",  district:"Miraflores",   points:1560,  level:"Veterinaria Premium",     plan:"premium",  subscription:"active", orgType:"veterinaria"},
   { email:"petshop@demo.com",      pass:"1234",   name:"PetShop Patitas",            role:"albergue",  district:"Barranco",     points:920,   level:"Pet Shop Aliado",         plan:null,       orgType:"petshop"},
 ];
+/* Fotos de perfil de ejemplo: caras reales (pravatar) para las personas.
+   Las organizaciones conservan su ícono de rol. */
+(function assignAvatars(){
+  let n = 11;
+  for(const u of SEED_USERS){
+    if((u.role === "ciudadano" || u.role === "adoptante") && !u.photo){
+      u.photo = `https://i.pravatar.cc/120?img=${n}`;
+      n = (n % 70) + 1;
+    }
+  }
+})();
 
 /* Coordenadas de distritos de Lima (lat, lng) */
 const DISTRICT_COORDS = {
@@ -668,22 +684,51 @@ function loadState(){
 }
 function saveState(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
 let state = loadState();
+// Asegurar que los seed users siempre existan en el estado local
+for(const su of SEED_USERS){
+  const existing = state.users.find(u=>u.email===su.email);
+  if(!existing) state.users.push(su);
+  else if(su.photo && !existing.photo) existing.photo = su.photo;
+}
 
 let DOGS = [
-  { id:1, name:"Max",      lat:-12.0719, lng:-77.0498, district:"Jesús María", status:"Reportado",     age:"Adulto",    sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕",       desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true,  publishedBy:"Albergue Patitas Felices" },
-  { id:2, name:"Luna",     lat:-12.1196, lng:-77.0367, district:"Miraflores",  status:"En adopción",   age:"2 años",    sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", desc:"Luna es cariñosa, juguetona y muy noble.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Albergue Esperanza" },
-  { id:3, name:"Rocky",    lat:-12.1395, lng:-77.0228, district:"Barranco",    status:"En seguimiento",age:"1 año",     sex:"Macho",  size:"Pequeño", health:["Herido"], img:"🐶", desc:"Estaba cerca del puente, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Puente de los Suspiros, Barranco", caseId:"#3258", verified:false, publishedBy:"Carlos Ruiz" },
-  { id:4, name:"Coco",     lat:-12.0750, lng:-77.0540, district:"Jesús María", status:"En adopción",   age:"3 años",    sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Av. Salaverry, Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
-  { id:5, name:"Bella",    lat:-12.1086, lng:-77.0006, district:"San Borja",   status:"Reportado",     age:"6 meses",   sex:"Hembra", size:"Pequeño", health:["Desnutrido"], img:"🐕", desc:"Cachorra muy delgada, parece perdida en la zona del parque.", reportedAt:"hace 1 hora", location:"Parque de la Felicidad, San Borja", caseId:"#3289", verified:false, publishedBy:"Elena Castro" },
-  { id:6, name:"Toby",     lat:-12.0855, lng:-77.0339, district:"Lince",       status:"En adopción",   age:"4 años",    sex:"Macho",  size:"Mediano", health:["Vacunado","Esterilizado"], img:"🐶", desc:"Cariñoso, juguetón. Listo para una familia activa.", reportedAt:"hace 5 días", location:"Av. Petit Thouars, Lince", caseId:"#3105", verified:true, publishedBy:"Refugio Lima Sur" },
-  { id:7, name:"Milo",     lat:-12.1356, lng:-76.9931, district:"Surco",       status:"Rescatado",     age:"2 años",    sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕", desc:"Rescatado de una calle peligrosa. Ahora en albergue.", reportedAt:"ayer", location:"Av. Tomás Marsano, Surco", caseId:"#3210", verified:true, publishedBy:"Ana Torres" },
-  { id:8, name:"Nala",     lat:-12.0768, lng:-77.0635, district:"Pueblo Libre",status:"Reportado",     age:"3 años",    sex:"Hembra", size:"Mediano", health:["Herido","Urgente"], img:"🐩", desc:"Lastimada en una pata. Urge atención veterinaria.", reportedAt:"hace 30 min", location:"Av. Sucre, Pueblo Libre", caseId:"#3290", verified:false, publishedBy:"Lucas Vega" },
-  { id:9, name:"Simba",    lat:-12.1167, lng:-77.0167, district:"Surquillo",   status:"En adopción",   age:"5 años",    sex:"Macho",  size:"Grande",  health:["Vacunado","Esterilizado","Saludable"], img:"🐕‍🦺", desc:"Perro maduro y tranquilo. Ideal para hogar sin niños pequeños.", reportedAt:"hace 1 semana", location:"Av. Angamos, Surquillo", caseId:"#3080", verified:true, publishedBy:"Albergue Esperanza" },
-  { id:10, name:"Lola",    lat:-12.1075, lng:-77.0357, district:"San Isidro",  status:"En adopción",   age:"1 año",     sex:"Hembra", size:"Pequeño", health:["Vacunado","Saludable"], img:"🐩", desc:"Cachorra juguetona, ideal para departamento.", reportedAt:"hace 4 días", location:"Parque El Olivar, San Isidro", caseId:"#3155", verified:true, publishedBy:"Albergue Patitas Felices" },
-  { id:11, name:"Zeus",    lat:-12.0464, lng:-77.0428, district:"Lima",        status:"Reportado",     age:"Adulto",    sex:"Macho",  size:"Grande",  health:["Urgente"], img:"🐕", desc:"Posible caso de maltrato. Necesita rescate inmediato.", reportedAt:"hace 2 horas", location:"Centro de Lima", caseId:"#3295", verified:false, publishedBy:"Sofía Mendoza" },
-  { id:12, name:"Bruno",   lat:-12.1300, lng:-77.0250, district:"Barranco",    status:"En seguimiento",age:"6 meses",   sex:"Macho",  size:"Pequeño", health:["Saludable"], img:"🐶", desc:"Cachorrito en seguimiento por rescatista temporal.", reportedAt:"hace 1 día", location:"Av. Grau, Barranco", caseId:"#3245", verified:true, publishedBy:"Carlos Ruiz" },
-  { id:13, name:"Lucky",   lat:-12.1196, lng:-77.0400, district:"Miraflores",  status:"Adoptado",      age:"3 años",    sex:"Macho",  size:"Mediano", health:["Vacunado","Esterilizado"], img:"🐕‍🦺", desc:"¡Encontró hogar! Adoptado por familia López.", reportedAt:"hace 1 mes", location:"Miraflores", caseId:"#3050", verified:true, publishedBy:"Juan López" },
-  { id:14, name:"Negra",   lat:-12.0900, lng:-77.0500, district:"Lince",       status:"Reportado",     age:"Adulto",    sex:"Hembra", size:"Mediano", health:["Saludable"], img:"🐕", desc:"Camina sola por la zona desde hace varios días.", reportedAt:"hace 4 horas", location:"Av. Arenales, Lince", caseId:"#3291", verified:false, publishedBy:"Diego Salas" },
+  { id:1, name:"Max",      lat:-12.0719, lng:-77.0498, district:"Jesús María", status:"Reportado",     age:"Adulto",    sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕", photo:"https://placedog.net/500/380?id=1",  desc:"Se ve asustado pero no es agresivo. Necesita ayuda.", reportedAt:"hoy 10:30 a.m.", location:"Av. Brasil, Jesús María", caseId:"#3247", verified:true,  publishedBy:"Albergue Patitas Felices" },
+  { id:2, name:"Luna",     lat:-12.1196, lng:-77.0367, district:"Miraflores",  status:"En adopción",   age:"2 años",    sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐩", photo:"https://placedog.net/500/380?id=2", desc:"Luna es cariñosa, juguetona y muy noble.", reportedAt:"ayer 4:15 p.m.", location:"Parque Kennedy, Miraflores", caseId:"#3201", verified:true, publishedBy:"Albergue Esperanza" },
+  { id:3, name:"Rocky",    lat:-12.1395, lng:-77.0228, district:"Barranco",    status:"En seguimiento",age:"1 año",     sex:"Macho",  size:"Pequeño", health:["Herido"], img:"🐶", photo:"https://placedog.net/500/380?id=3", desc:"Estaba cerca del puente, parece tener una pata lesionada.", reportedAt:"hace 3 horas", location:"Puente de los Suspiros, Barranco", caseId:"#3258", verified:false, publishedBy:"Carlos Ruiz" },
+  { id:4, name:"Coco",     lat:-12.0750, lng:-77.0540, district:"Jesús María", status:"En adopción",   age:"3 años",    sex:"Macho",  size:"Grande",  health:["Saludable","Esterilizado"], img:"🐕‍🦺", photo:"https://placedog.net/500/380?id=4", desc:"Tranquilo, ideal para familia con jardín.", reportedAt:"hace 2 días", location:"Av. Salaverry, Jesús María", caseId:"#3120", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:5, name:"Bella",    lat:-12.1086, lng:-77.0006, district:"San Borja",   status:"Reportado",     age:"6 meses",   sex:"Hembra", size:"Pequeño", health:["Desnutrido"], img:"🐕", photo:"https://placedog.net/500/380?id=5", desc:"Cachorra muy delgada, parece perdida en la zona del parque.", reportedAt:"hace 1 hora", location:"Parque de la Felicidad, San Borja", caseId:"#3289", verified:false, publishedBy:"Elena Castro" },
+  { id:6, name:"Toby",     lat:-12.0855, lng:-77.0339, district:"Lince",       status:"En adopción",   age:"4 años",    sex:"Macho",  size:"Mediano", health:["Vacunado","Esterilizado"], img:"🐶", photo:"https://placedog.net/500/380?id=6", desc:"Cariñoso, juguetón. Listo para una familia activa.", reportedAt:"hace 5 días", location:"Av. Petit Thouars, Lince", caseId:"#3105", verified:true, publishedBy:"Refugio Lima Sur" },
+  { id:7, name:"Milo",     lat:-12.1356, lng:-76.9931, district:"Surco",       status:"Rescatado",     age:"2 años",    sex:"Macho",  size:"Mediano", health:["Saludable"], img:"🐕", photo:"https://placedog.net/500/380?id=7", desc:"Rescatado de una calle peligrosa. Ahora en albergue.", reportedAt:"ayer", location:"Av. Tomás Marsano, Surco", caseId:"#3210", verified:true, publishedBy:"Ana Torres" },
+  { id:8, name:"Nala",     lat:-12.0768, lng:-77.0635, district:"Pueblo Libre",status:"Reportado",     age:"3 años",    sex:"Hembra", size:"Mediano", health:["Herido","Urgente"], img:"🐩", photo:"https://placedog.net/500/380?id=8", desc:"Lastimada en una pata. Urge atención veterinaria.", reportedAt:"hace 30 min", location:"Av. Sucre, Pueblo Libre", caseId:"#3290", verified:false, publishedBy:"Lucas Vega" },
+  { id:9, name:"Simba",    lat:-12.1167, lng:-77.0167, district:"Surquillo",   status:"En adopción",   age:"5 años",    sex:"Macho",  size:"Grande",  health:["Vacunado","Esterilizado","Saludable"], img:"🐕‍🦺", photo:"https://placedog.net/500/380?id=9", desc:"Perro maduro y tranquilo. Ideal para hogar sin niños pequeños.", reportedAt:"hace 1 semana", location:"Av. Angamos, Surquillo", caseId:"#3080", verified:true, publishedBy:"Albergue Esperanza" },
+  { id:10, name:"Lola",    lat:-12.1075, lng:-77.0357, district:"San Isidro",  status:"En adopción",   age:"1 año",     sex:"Hembra", size:"Pequeño", health:["Vacunado","Saludable"], img:"🐩", photo:"https://placedog.net/500/380?id=10", desc:"Cachorra juguetona, ideal para departamento.", reportedAt:"hace 4 días", location:"Parque El Olivar, San Isidro", caseId:"#3155", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:11, name:"Zeus",    lat:-12.0464, lng:-77.0428, district:"Lima",        status:"Reportado",     age:"Adulto",    sex:"Macho",  size:"Grande",  health:["Urgente"], img:"🐕", photo:"https://placedog.net/500/380?id=11", desc:"Posible caso de maltrato. Necesita rescate inmediato.", reportedAt:"hace 2 horas", location:"Centro de Lima", caseId:"#3295", verified:false, publishedBy:"Sofía Mendoza" },
+  { id:12, name:"Bruno",   lat:-12.1300, lng:-77.0250, district:"Barranco",    status:"En seguimiento",age:"6 meses",   sex:"Macho",  size:"Pequeño", health:["Saludable"], img:"🐶", photo:"https://placedog.net/500/380?id=12", desc:"Cachorrito en seguimiento por rescatista temporal.", reportedAt:"hace 1 día", location:"Av. Grau, Barranco", caseId:"#3245", verified:true, publishedBy:"Carlos Ruiz" },
+  { id:13, name:"Lucky",   lat:-12.1196, lng:-77.0400, district:"Miraflores",  status:"Adoptado",      age:"3 años",    sex:"Macho",  size:"Mediano", health:["Vacunado","Esterilizado"], img:"🐕‍🦺", photo:"https://placedog.net/500/380?id=13", desc:"¡Encontró hogar! Adoptado por familia López.", reportedAt:"hace 1 mes", location:"Miraflores", caseId:"#3050", verified:true, publishedBy:"Juan López" },
+  { id:14, name:"Negra",   lat:-12.0900, lng:-77.0500, district:"Lince",       status:"Reportado",     age:"Adulto",    sex:"Hembra", size:"Mediano", health:["Saludable"], img:"🐕", photo:"https://placedog.net/500/380?id=14", desc:"Camina sola por la zona desde hace varios días.", reportedAt:"hace 4 horas", location:"Av. Arenales, Lince", caseId:"#3291", verified:false, publishedBy:"Diego Salas" },
+  { id:15, name:"Duke",    lat:-12.0705, lng:-77.0470, district:"Jesús María", status:"En adopción",   age:"2 años",    sex:"Macho",  size:"Grande",  health:["Vacunado","Esterilizado","Saludable"], img:"🐕‍🦺", photo:"https://placedog.net/500/380?id=15", desc:"Muy sociable y educado. Se lleva bien con niños y otros perros.", reportedAt:"hace 3 días", location:"Campo de Marte, Jesús María", caseId:"#3160", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:16, name:"Frida",   lat:-12.0740, lng:-77.0510, district:"Jesús María", status:"En adopción",   age:"8 meses",   sex:"Hembra", size:"Pequeño", health:["Vacunado","Saludable"], img:"🐩", photo:"https://placedog.net/500/380?id=16", desc:"Cachorra tierna y juguetona, ideal para primera adopción.", reportedAt:"hace 6 días", location:"Av. Salaverry, Jesús María", caseId:"#3162", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:17, name:"Maya",    lat:-12.1180, lng:-77.0175, district:"Surquillo",   status:"En adopción",   age:"3 años",    sex:"Hembra", size:"Mediano", health:["Vacunado","Esterilizado","Saludable"], img:"🐕", photo:"https://placedog.net/500/380?id=17", desc:"Tranquila y agradecida. Perfecta para departamento.", reportedAt:"hace 2 días", location:"Av. Angamos Este, Surquillo", caseId:"#3181", verified:true, publishedBy:"Albergue Esperanza" },
+  { id:18, name:"Rex",     lat:-12.1370, lng:-76.9960, district:"Surco",       status:"En adopción",   age:"4 años",    sex:"Macho",  size:"Grande",  health:["Vacunado","Esterilizado"], img:"🐕‍🦺", photo:"https://placedog.net/500/380?id=18", desc:"Guardián noble y leal. Ideal para casa con patio.", reportedAt:"hace 1 semana", location:"Av. Caminos del Inca, Surco", caseId:"#3092", verified:true, publishedBy:"Refugio Lima Sur" },
+  { id:19, name:"Canela",  lat:-12.1340, lng:-76.9910, district:"Surco",       status:"En adopción",   age:"1 año",     sex:"Hembra", size:"Mediano", health:["Vacunado","Saludable"], img:"🐕", photo:"https://placedog.net/500/380?id=19", desc:"Dulce y cariñosa, le encanta pasear. Busca familia activa.", reportedAt:"hace 5 días", location:"Jockey Plaza, Surco", caseId:"#3094", verified:true, publishedBy:"Refugio Lima Sur" },
+  { id:20, name:"Pepa",    lat:-12.1210, lng:-77.0300, district:"Miraflores",  status:"Recibiendo ayuda",age:"Adulto",  sex:"Hembra", size:"Pequeño", health:["Desnutrido"], img:"🐩", photo:"https://placedog.net/500/380?id=20", desc:"Vecinos le dejan agua y comida mientras se coordina su rescate.", reportedAt:"hace 45 min", location:"Malecón de Miraflores", caseId:"#3298", verified:false, publishedBy:"Sofía Mendoza" },
+  { id:21, name:"Otto",    lat:-12.0790, lng:-77.0620, district:"Pueblo Libre",status:"Rescate en proceso",age:"2 años",sex:"Macho",  size:"Mediano", health:["Herido","Urgente"], img:"🐕", photo:"https://placedog.net/500/380?id=21", desc:"Rescatista en camino. Atropellado, requiere veterinaria urgente.", reportedAt:"hace 20 min", location:"Av. La Marina, Pueblo Libre", caseId:"#3299", verified:false, publishedBy:"Lucas Vega" },
+  { id:22, name:"Nube",    lat:-12.1090, lng:-77.0020, district:"San Borja",   status:"En seguimiento",age:"7 meses",   sex:"Hembra", size:"Pequeño", health:["Saludable"], img:"🐶", photo:"https://placedog.net/500/380?id=22", desc:"Camada abandonada; una vecina la cuida temporalmente.", reportedAt:"hace 8 horas", location:"Av. San Luis, San Borja", caseId:"#3286", verified:true, publishedBy:"Elena Castro" },
+  { id:23, name:"Sol",     lat:-12.1050, lng:-77.0340, district:"San Isidro",  status:"Rescatado",     age:"3 años",    sex:"Hembra", size:"Mediano", health:["Saludable","Vacunado"], img:"🐕", photo:"https://placedog.net/500/380?id=23", desc:"Rescatada y en observación. Pronto disponible para adopción.", reportedAt:"hace 3 días", location:"Calle Los Libertadores, San Isidro", caseId:"#3140", verified:true, publishedBy:"Albergue Patitas Felices" },
+  { id:24, name:"Balto",   lat:-12.0480, lng:-77.0400, district:"Lima",        status:"Reportado",     age:"Adulto",    sex:"Macho",  size:"Grande",  health:["Saludable"], img:"🐕‍🦺", photo:"https://placedog.net/500/380?id=24", desc:"Ronda el mercado buscando comida. Parece dócil.", reportedAt:"hace 5 horas", location:"Mercado Central, Cercado de Lima", caseId:"#3293", verified:false, publishedBy:"Diego Salas" },
+];
+
+/* ============= MASCOTAS PERDIDAS =============
+   Publicación gratuita. El dueño puede "potenciar" con un pago simbólico
+   (más visibilidad) y ofrecer una recompensa a quien brinde información. */
+let LOST_PETS = [
+  { id:"L1", name:"Rocco", img:"🐕", photo:"https://placedog.net/500/380?id=30", district:"Miraflores", lat:-12.1210, lng:-77.0290, lastSeen:"Parque Kennedy, Miraflores", date:"hoy 8:20 a.m.", reward:150, boosted:true,  status:"Perdido",   sex:"Macho",  size:"Mediano", contact:"María · 987 654 321", desc:"Se soltó de su correa. Usa collar rojo. Muy asustadizo, responde a su nombre." },
+  { id:"L2", name:"Chloe", img:"🐩", photo:"https://placedog.net/500/380?id=31", district:"Jesús María", lat:-12.0730, lng:-77.0480, lastSeen:"Av. Brasil cdra. 20", date:"ayer 6:40 p.m.", reward:0,   boosted:false, status:"Perdido",   sex:"Hembra", size:"Pequeño", contact:"Diego · 999 111 222", desc:"Poodle blanca con lazo celeste. Tiene microchip." },
+  { id:"L3", name:"Thor",  img:"🐶", photo:"https://placedog.net/500/380?id=32", district:"Surco",       lat:-12.1360, lng:-76.9950, lastSeen:"Av. Tomás Marsano", date:"hace 2 días", reward:300, boosted:true,  status:"Perdido",   sex:"Macho",  size:"Grande",  contact:"Ana · 955 333 444", desc:"Pastor alemán joven. Muy noble. Recompensa por información que lleve a encontrarlo." },
+  { id:"L5", name:"Manchas",img:"🐕",photo:"https://placedog.net/500/380?id=33", district:"San Isidro",  lat:-12.1060, lng:-77.0370, lastSeen:"Parque El Olivar, San Isidro", date:"hoy 11:05 a.m.", reward:200, boosted:true, status:"Perdido", sex:"Macho", size:"Mediano", contact:"Lucía · 940 222 888", desc:"Beagle tricolor. Escapó por la puerta abierta. Usa placa con teléfono." },
+  { id:"L6", name:"Nina",  img:"🐩", photo:"https://placedog.net/500/380?id=34", district:"Lince",       lat:-12.0860, lng:-77.0330, lastSeen:"Av. Arenales, Lince", date:"ayer 9:10 p.m.", reward:0, boosted:false, status:"Perdido", sex:"Hembra", size:"Pequeño", contact:"Pedro · 933 444 555", desc:"Schnauzer gris pequeña, muy tímida. No responde bien a extraños." },
+  { id:"L4", name:"Kira",  img:"🐕", photo:"https://placedog.net/500/380?id=35", district:"Barranco",    lat:-12.1400, lng:-77.0240, lastSeen:"Puente de los Suspiros", date:"hace 4 días", reward:80, boosted:false, status:"Encontrado", sex:"Hembra", size:"Mediano", contact:"Carlos · 966 555 777", desc:"¡Reunida con su familia gracias a la comunidad! 🎉" },
+  { id:"L7", name:"Tomás", img:"🐶", photo:"https://placedog.net/500/380?id=36", district:"Pueblo Libre", lat:-12.0775, lng:-77.0630, lastSeen:"Plaza Bolívar, Pueblo Libre", date:"hace 6 días", reward:120, boosted:false, status:"Encontrado", sex:"Macho", size:"Pequeño", contact:"Rosa · 977 888 999", desc:"¡Apareció sano y salvo! Gracias a quien lo reconoció por la app. 🎉" },
 ];
 
 const NOTIF = [
@@ -692,7 +737,7 @@ const NOTIF = [
   { ic:"✅", cls:"g", t:"Evidencia verificada — Tu foto de Luna fue aprobada. +20 pts.", ts:"Hace 18 min", dot:false },
   { ic:"📍", cls:"b", t:"Nuevo caso reportado cerca de tu área (Av. Brasil).", ts:"Hace 1 hora", dot:false },
   { ic:"❤️", cls:"r", t:"Tu solicitud de adopción por Max fue aceptada.", ts:"Hace 2 horas", dot:false },
-  { ic:"🏆", cls:"y", t:"Tienes 150 PawPoints para canjear en VetCare San Isidro.", ts:"Hace 1 día", dot:false },
+  { ic:"🏆", cls:"y", t:"¡Subiste a Protector Nivel 3! Desbloqueaste tu Certificado Bronce de Voluntariado.", ts:"Hace 1 día", dot:false },
 ];
 
 let HAZARDS = [
@@ -724,6 +769,28 @@ const BADGES = [
   { id:"rescatista_experto", ic:"🏆", name:"Rescatista Experto", desc:"Participa en 25 rescates validados por organizaciones aliadas.", req:25, unit:"rescates" },
 ];
 
+/* Helper: renderiza la foto real de una mascota/usuario (campo .photo) rellenando
+   el contenedor; si no hay foto, muestra el emoji (.img o el fallback dado). */
+function pic(item, fallback){
+  const emoji = (item && item.img) || fallback || "🐕";
+  if(item && item.photo) return `<img class="imgfill" src="${item.photo}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${emoji}'))"/>`;
+  return emoji;
+}
+/* Hash simple y estable para derivar un número a partir de un texto. */
+function hashStr(s){ let h=0; for(let i=0;i<(s||"").length;i++){ h=(h*31 + s.charCodeAt(i))|0; } return Math.abs(h); }
+
+/* Foto de perfil de un usuario (avatar de persona/organización).
+   Las personas siempre muestran una cara real (pravatar) aunque no tengan
+   foto guardada; las organizaciones conservan su ícono de rol. */
+function userPic(u, fallback){
+  if(u && u.photo) return `<img class="imgfill" src="${u.photo}" alt="" loading="lazy"/>`;
+  if(u && (u.role==="ciudadano" || u.role==="adoptante")){
+    const n = (hashStr(u.email||u.name) % 70) + 1;
+    return `<img class="imgfill" src="https://i.pravatar.cc/120?img=${n}" alt="" loading="lazy"/>`;
+  }
+  return (u && ROLES[u.role] && ROLES[u.role].icon) || fallback || "👤";
+}
+
 /* Helper: usuario premium (cosmético para protector, B2B para org) */
 function isPremium(u){ return u && u.subscription === "active"; }
 function nameDisplay(u){
@@ -748,6 +815,65 @@ const DONATION_OPTIONS = [
   { amount:50,  desc:"Esterilización parcial para 1 perro" },
   { amount:100, desc:"Kit completo para perro rescatado" },
 ];
+
+/* ============= RANKING POR TEMPORADA (reiniciable cada 3 meses) =============
+   Los PawPoints ya NO se canjean por premios. Definen el nivel de compromiso
+   del usuario y su posición en el ranking barrial de la temporada. Cada nivel
+   desbloquea insignias y certificados, no descuentos. */
+const SEASON = { name:"Temporada 4 · 2026", ends:"30 sep 2026", resetEveryMonths:3 };
+
+/* Escala de niveles: define insignias/certificados que se desbloquean. */
+const LEVELS = [
+  { min:0,     name:"Protector Nivel 1", ic:"🐾", reward:"Insignia de Bienvenida" },
+  { min:300,   name:"Protector Nivel 2", ic:"🐕", reward:"Insignia Protector Activo" },
+  { min:750,   name:"Protector Nivel 3", ic:"🛡️", reward:"Certificado Bronce de Voluntariado" },
+  { min:1500,  name:"Protector Nivel 5", ic:"⭐", reward:"Certificado Plata + Insignia Destacado" },
+  { min:3000,  name:"Protector Nivel 7", ic:"🏆", reward:"Certificado Oro + Nominación de Honor" },
+];
+function levelFor(points){
+  let cur = LEVELS[0];
+  for(const l of LEVELS){ if(points >= l.min) cur = l; }
+  const next = LEVELS.find(l => l.min > points) || null;
+  return { cur, next, toNext: next ? next.min - points : 0 };
+}
+
+/* Ranking de temporada del distrito (demo, ordenado por puntos). */
+function seasonRanking(){
+  return state.users
+    .filter(u => u.role==="ciudadano" || u.role==="adoptante")
+    .map(u => ({ name:u.name, district:u.district, pts:u.points }))
+    .sort((a,b)=> b.pts - a.pts)
+    .slice(0, 8);
+}
+
+/* ============= APARTADO DE ALBERGUES =============
+   Agrupa los perros "En adopción" por el albergue/organización que los publica. */
+function shelterList(){
+  const orgs = state.users.filter(u => u.role==="albergue" && (u.orgType==="albergue" || !u.orgType));
+  return orgs.map(o => {
+    const dogs = DOGS.filter(d => d.publishedBy === o.name && d.status === "En adopción");
+    return { name:o.name, district:o.district, premium:isPremium(o), verified:(o.plan==="premium"||o.level||"").length>0, dogs };
+  }).filter(s => s.dogs.length >= 0);
+}
+
+/* ============= CENSO DINÁMICO DE ANIMALES EN SITUACIÓN DE ABANDONO =============
+   Consolida reportes de perros + zonas de riesgo por distrito. Sirve a
+   municipalidades y gobiernos locales para focalizar recursos. */
+function censusByDistrict(){
+  const map = {};
+  const ensure = d => (map[d] = map[d] || { district:d, reported:0, adoption:0, rescued:0, hazards:0, lost:0 });
+  DOGS.forEach(d => {
+    const e = ensure(d.district);
+    if(["Reportado","Recibiendo ayuda","Rescate en proceso","En seguimiento"].includes(d.status)) e.reported++;
+    else if(d.status === "En adopción") e.adoption++;
+    else if(d.status === "Rescatado") e.rescued++;
+  });
+  HAZARDS.forEach(h => { const dist = (h.loc||"").split(",").pop().trim() || "Lima"; ensure(dist).hazards++; });
+  LOST_PETS.forEach(p => { if(p.status==="Perdido") ensure(p.district).lost++; });
+  return Object.values(map)
+    .map(e => ({ ...e, total: e.reported + e.rescued + e.hazards + e.lost }))
+    .sort((a,b)=> b.total - a.total);
+}
 
 /* ============= SISTEMA DE MISIONES con cooldown (separadas por rol) ============= */
 const MISSIONS_PROTECTOR = [
@@ -890,8 +1016,10 @@ const emailKey = (e) => e.toLowerCase().replace(/[.$#\[\]\/]/g, "_");
 const store = {
   async findUser(email){
     if(fbReady){
-      const snap = await fbDB.ref("users/" + emailKey(email)).once("value");
-      return snap.val();
+      try{
+        const snap = await fbDB.ref("users/" + emailKey(email)).once("value");
+        return snap.val();
+      }catch(e){ console.warn("FB findUser fallback:", e.message); }
     }
     return state.users.find(u => u.email === email.toLowerCase()) || null;
   },
@@ -899,7 +1027,7 @@ const store = {
     user.email = user.email.toLowerCase();
     user.createdAt = Date.now();
     if(fbReady){
-      await fbDB.ref("users/" + emailKey(user.email)).set(user);
+      try{ await fbDB.ref("users/" + emailKey(user.email)).set(user); }catch(e){ console.warn("FB createUser fallback:", e.message); }
     }
     if(!state.users.find(u=>u.email===user.email)) state.users.push(user);
     saveState();
@@ -907,7 +1035,7 @@ const store = {
   },
   async updateUser(email, patch){
     if(fbReady){
-      await fbDB.ref("users/" + emailKey(email)).update(patch);
+      try{ await fbDB.ref("users/" + emailKey(email)).update(patch); }catch(e){ console.warn("FB updateUser fallback:", e.message); }
     }
     const u = state.users.find(u=>u.email===email);
     if(u) Object.assign(u, patch);
@@ -916,58 +1044,87 @@ const store = {
   async addDog(dog){
     dog.createdAt = Date.now();
     if(fbReady){
-      const ref = fbDB.ref("dogs").push();
-      dog.id = ref.key;
-      await ref.set(dog);
-    } else {
-      dog.id = "d" + Date.now();
-      DOGS.unshift(dog);
+      try{
+        const ref = fbDB.ref("dogs").push();
+        dog.id = ref.key;
+        await ref.set(dog);
+        return dog;
+      }catch(e){ console.warn("FB addDog fallback:", e.message); }
     }
+    dog.id = "d" + Date.now();
+    DOGS.unshift(dog);
     return dog;
   },
   async addHazard(h){
     h.createdAt = Date.now();
     if(fbReady){
-      const ref = fbDB.ref("hazards").push();
-      h.id = ref.key;
-      await ref.set(h);
-    } else {
-      h.id = "h" + Date.now();
-      HAZARDS.unshift(h);
+      try{
+        const ref = fbDB.ref("hazards").push();
+        h.id = ref.key;
+        await ref.set(h);
+        return h;
+      }catch(e){ console.warn("FB addHazard fallback:", e.message); }
     }
+    h.id = "h" + Date.now();
+    HAZARDS.unshift(h);
     return h;
   },
   async confirmHazard(id){
     if(fbReady){
-      const ref = fbDB.ref("hazards/" + id + "/confirmed");
-      await ref.transaction(v => (v || 0) + 1);
-    } else {
-      const h = HAZARDS.find(x=>x.id===id);
-      if(h) h.confirmed = (h.confirmed||0) + 1;
+      try{
+        const ref = fbDB.ref("hazards/" + id + "/confirmed");
+        await ref.transaction(v => (v || 0) + 1);
+        return;
+      }catch(e){ console.warn("FB confirmHazard fallback:", e.message); }
     }
+    const h = HAZARDS.find(x=>x.id===id);
+    if(h) h.confirmed = (h.confirmed||0) + 1;
+  },
+  async addLost(p){
+    p.createdAt = Date.now();
+    if(fbReady){
+      try{
+        const ref = fbDB.ref("lost").push();
+        p.id = ref.key;
+        await ref.set(p);
+        return p;
+      }catch(e){ console.warn("FB addLost fallback:", e.message); }
+    }
+    p.id = "L" + Date.now();
+    LOST_PETS.unshift(p);
+    return p;
   },
 };
 
 /* ---- Seed DB (agrega faltantes sin borrar existentes) ---- */
 async function seedIfEmpty(){
   if(!fbReady) return;
-  // Usuarios: agregar los que falten
+  // Usuarios: agregar los que falten y completar foto de perfil si falta
   const usersSnap = await fbDB.ref("users").once("value");
-  const existingEmails = new Set(Object.values(usersSnap.val() || {}).map(u=>u.email));
+  const existingUsers = {};
+  usersSnap.forEach(ch => { const u = ch.val(); if(u && u.email) existingUsers[u.email] = {key: ch.key, val: u}; });
   for(const u of SEED_USERS){
-    if(!existingEmails.has(u.email)){
+    const ex = existingUsers[u.email];
+    if(!ex){
       await fbDB.ref("users/" + emailKey(u.email)).set({...u, createdAt: Date.now()});
       console.log("➕ Usuario añadido:", u.email);
+    } else if(u.photo && !ex.val.photo){
+      await fbDB.ref("users/" + ex.key + "/photo").set(u.photo);
     }
   }
-  // Perros: agregar los que falten (por nombre+distrito como clave)
+  // Perros: agregar los que falten y completar foto si falta (por nombre+distrito)
   const dogsSnap = await fbDB.ref("dogs").once("value");
-  const existingDogs = new Set(Object.values(dogsSnap.val() || {}).map(d=>`${d.name}|${d.district}`));
+  const existingDogs = {};
+  dogsSnap.forEach(ch => { const d = ch.val(); if(d) existingDogs[`${d.name}|${d.district}`] = {key: ch.key, val: d}; });
   for(const d of DOGS){
-    if(!existingDogs.has(`${d.name}|${d.district}`)){
+    const k = `${d.name}|${d.district}`;
+    const ex = existingDogs[k];
+    if(!ex){
       const ref = fbDB.ref("dogs").push();
       await ref.set({...d, id: ref.key, createdAt: Date.now()});
       console.log("🐕 Perro añadido:", d.name);
+    } else if(d.photo && !ex.val.photo){
+      await fbDB.ref("dogs/" + ex.key + "/photo").set(d.photo);
     }
   }
   // Peligros: agregar los que falten (por título)
@@ -977,6 +1134,15 @@ async function seedIfEmpty(){
     if(!existingHz.has(h.t)){
       const ref = fbDB.ref("hazards").push();
       await ref.set({...h, id: ref.key, createdAt: Date.now()});
+    }
+  }
+  // Mascotas perdidas: agregar las que falten (por nombre+últimavez)
+  const lostSnap = await fbDB.ref("lost").once("value");
+  const existingLost = new Set(Object.values(lostSnap.val() || {}).map(p=>`${p.name}|${p.lastSeen}`));
+  for(const p of LOST_PETS){
+    if(!existingLost.has(`${p.name}|${p.lastSeen}`)){
+      const ref = fbDB.ref("lost").push();
+      await ref.set({...p, id: ref.key, createdAt: Date.now()});
     }
   }
 }
@@ -990,18 +1156,26 @@ function fillCoords(item){
 }
 function setupLiveSync(){
   if(!fbReady) return;
-  fbDB.ref("dogs").on("value", snap => {
-    const v = snap.val();
-    if(v) DOGS = Object.values(v).map(fillCoords).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-    const cur = state.current?.screen;
-    if(cur === "map" || cur === "dogDetail") renderScreen(cur, state.current.params || {});
-  });
-  fbDB.ref("hazards").on("value", snap => {
-    const v = snap.val();
-    if(v) HAZARDS = Object.values(v).map(fillCoords).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-    const cur = state.current?.screen;
-    if(cur === "map" || cur === "hazards") renderScreen(cur, state.current.params || {});
-  });
+  try{
+    fbDB.ref("dogs").on("value", snap => {
+      const v = snap.val();
+      if(v) DOGS = Object.values(v).map(fillCoords).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      const cur = state.current?.screen;
+      if(cur === "map" || cur === "dogDetail") renderScreen(cur, state.current.params || {});
+    }, e => console.warn("FB dogs sync error:", e.message));
+    fbDB.ref("hazards").on("value", snap => {
+      const v = snap.val();
+      if(v) HAZARDS = Object.values(v).map(fillCoords).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      const cur = state.current?.screen;
+      if(cur === "map" || cur === "hazards") renderScreen(cur, state.current.params || {});
+    }, e => console.warn("FB hazards sync error:", e.message));
+    fbDB.ref("lost").on("value", snap => {
+      const v = snap.val();
+      if(v) LOST_PETS = Object.values(v).map(fillCoords).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      const cur = state.current?.screen;
+      if(cur === "map" || cur === "lostPets" || cur === "lostDetail") renderScreen(cur, state.current.params || {});
+    }, e => console.warn("FB lost sync error:", e.message));
+  }catch(e){ console.warn("FB liveSync setup error:", e.message); }
 }
 
 /* ----------------- Toast & navigation ----------------- */
@@ -1117,7 +1291,7 @@ function openSideMenu(){
   const adminBtn = u.role === "admin" ? `<button data-go="adminPanel"><span class="ic">👑</span>Panel de Admin</button><div class="sep"></div>` : "";
   sideMenu.innerHTML = `
     <div class="top">
-      <div class="avatar">${ROLES[u.role].icon}</div>
+      <div class="avatar">${userPic(u)}</div>
       <div class="name">${u.name}</div>
       <div class="role">${ROLES[u.role].label}</div>
     </div>
@@ -1126,18 +1300,21 @@ function openSideMenu(){
       <button data-go="subscription" style="background:linear-gradient(90deg,#FFF7D6,#FFE680);font-weight:700"><span class="ic" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff">⭐</span>${isPremium(u)?"Mi Suscripción Premium":"Hazte Premium"}</button>
       <div class="sep"></div>
       <button data-go="map"><span class="ic">🗺️</span>Mapa interactivo</button>
+      <button data-go="shelters"><span class="ic">🏠</span>Albergues · Adopción</button>
+      <button data-go="lostPets"><span class="ic">🔎</span>Mascotas perdidas</button>
       <button data-go="missions"><span class="ic">🎯</span>Misiones del día</button>
       <button data-go="campaigns"><span class="ic">📣</span>Campañas comunitarias</button>
       <button data-go="donations"><span class="ic">💝</span>Donaciones transparentes</button>
       <button data-go="tips"><span class="ic">💡</span>Centro educativo</button>
       <button data-go="hazards"><span class="ic">⚠️</span>Zonas de riesgo</button>
       <button data-go="reportHazard"><span class="ic">🚨</span>Reportar zona de riesgo</button>
+      ${u.role==="admin" ? '<button data-go="census"><span class="ic">📊</span>Censo dinámico (autoridades)</button>' : ''}
       <div class="sep"></div>
       <button data-go="activity"><span class="ic">📂</span>Mi actividad</button>
-      <button data-go="points"><span class="ic">🏆</span>Mis PawPoints</button>
+      <button data-go="points"><span class="ic">🏆</span>PawPoints y nivel</button>
       <button data-go="badges"><span class="ic">🏅</span>Mis Insignias</button>
       <button data-go="certifs"><span class="ic">📜</span>Mis Certificados</button>
-      <button data-go="vetDiscounts"><span class="ic">🏥</span>Descuentos veterinarias</button>
+      <button data-go="vetDiscounts"><span class="ic">🏥</span>Beneficios de aliados</button>
       <button data-go="notif"><span class="ic">🔔</span>Notificaciones</button>
       <div class="sep"></div>
       <button data-go="profile"><span class="ic">👤</span>Mi perfil</button>
@@ -1197,6 +1374,12 @@ function renderScreen(screen, params={}){
     case "createCampaign":return scrCreateCampaign();
     case "createMission": return scrCreateMission();
     case "myCreations":   return scrMyCreations();
+    case "lostPets":      return scrLostPets();
+    case "lostDetail":    return scrLostDetail(params);
+    case "publishLost":   return scrPublishLost();
+    case "shelters":      return scrShelters();
+    case "shelterDetail": return scrShelterDetail(params);
+    case "census":        return scrCensus();
     default:              return scrLogin();
   }
 }
@@ -1466,17 +1649,17 @@ function scrSubscription(){
   const u = currentUser();
   const isOrg = u.role === "albergue";
   const active = u.subscription === "active";
-  const price = isOrg ? "49.99" : "8.99";
+  const price = isOrg ? "49.00" : "8.99";
   const benefits = isOrg ? [
-    {ic:"🥇", t:"Aparece primero en búsquedas", s:"Tu organización se promociona arriba de los resultados"},
-    {ic:"📊", t:"Panel de analítica comercial", s:"ROI, clientes captados, cupones, conversiones"},
-    {ic:"📣", t:"Publica campañas ilimitadas", s:"Vacunación, esterilización, adopción"},
-    {ic:"🎟️", t:"Cupones promocionales ilimitados", s:"Atrae más clientes con descuentos canjeables"},
-    {ic:"💎", t:"Badge ⭐ Premium en tu perfil", s:"Genera confianza ante adoptantes"},
+    {ic:"📍", t:"Pin destacado en el mapa", s:"Con identidad de marca y posicionamiento prioritario"},
+    {ic:"📊", t:"Datos estadísticos de tu negocio", s:"Visibilidad, tráfico atraído, interacciones y canjes"},
+    {ic:"🎨", t:"Personalización completa", s:"Colores, fotos más grandes y anuncios propios en la app"},
+    {ic:"🎟️", t:"Gestión autónoma de promociones", s:"Publica cupones y ofertas cuando quieras"},
+    {ic:"💎", t:"Insignia de auspiciador ⭐", s:"Empresa patrocinadora del bienestar animal"},
   ] : [
-    {ic:"⭐", t:"Estrella dorada al lado de tu nombre", s:"Otros usuarios te ven como Protector Premium"},
-    {ic:"🎨", t:"Nombre en color dorado", s:"Tu nombre destaca en chats, ranking y reportes"},
-    {ic:"🏅", t:"Badge especial 'Aliado Premium'", s:"Reconocimiento visible en tu perfil"},
+    {ic:"⭐", t:"Insignia de auspiciador en tu perfil", s:"Estrella dorada y nombre destacado en la comunidad"},
+    {ic:"🚀", t:"Potenciador automático de mascotas perdidas", s:"Notificación banner y mayor rango de visibilidad, sin pagar por cada impulso"},
+    {ic:"📚", t:"Acceso completo a revistas y guías", s:"Noticias y contenido sobre el cuidado de mascotas"},
     {ic:"🎁", t:"Acceso anticipado a beneficios", s:"Veterinarias y pet shops aliados primero"},
     {ic:"💖", t:"Apoyas a la plataforma", s:"Tu suscripción financia la operación"},
   ];
@@ -1531,14 +1714,18 @@ function scrSubscription(){
 function scrPayment({type="person", amount="8.99"}={}){
   if(!currentUser()) return go("login");
   hideNav(); view.classList.remove("dark");
+  const isBoost = type==="boost";
+  const isDonation = type==="donation";
+  const concept = isBoost ? "Impulso de mascota perdida" : isDonation ? "Donación" : (type==="org"?"Premium Active":"Aliado Premium");
+  const subConcept = isBoost ? "Pago único simbólico" : isDonation ? "Aporte único" : "Suscripción mensual";
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 💳 Pago seguro</div></div>
     <div class="pad">
       <div class="card" style="background:linear-gradient(135deg,#1A1F36,#2D3450);border-color:#1A1F36;color:#fff">
         <div class="avatar" style="background:rgba(255,255,255,.15);color:#fff">💳</div>
         <div class="meta">
-          <p class="t" style="color:#fff">PawShot ${type==="org"?"Premium Active":"Aliado Premium"}</p>
-          <p class="s" style="color:rgba(255,255,255,.85)">Suscripción mensual</p>
+          <p class="t" style="color:#fff">PawShot · ${concept}</p>
+          <p class="s" style="color:rgba(255,255,255,.85)">${subConcept}</p>
         </div>
         <div style="font-size:24px;font-weight:800;color:#FFD100">S/. ${amount}</div>
       </div>
@@ -1588,6 +1775,8 @@ function scrPayment({type="person", amount="8.99"}={}){
     if(!num || !exp || !cvv || !name){ toast("Completa todos los datos"); return; }
     const btn = $("#pay"); btn.disabled = true; btn.textContent = "Procesando pago...";
     setTimeout(()=>{
+      if(isBoost){ toast("🚀 ¡Publicación potenciada! Mayor visibilidad activada."); return go("lostPets"); }
+      if(isDonation){ toast("💝 ¡Gracias por tu donación de S/. "+amount+"!"); return go("donations"); }
       updateUser({ subscription:"active", subscribedAt: Date.now() });
       toast("✅ ¡Suscripción activada!");
       go("subscription");
@@ -1778,17 +1967,37 @@ function scrDonations(){
         </div>
       </div>
 
+      <h3 class="section">Elige la modalidad</h3>
+      <div class="row" style="gap:8px">
+        <div class="card mode-opt active" data-mode="albergue" style="flex-direction:column;text-align:center;cursor:pointer;border:1.5px solid var(--brand)">
+          <div style="font-size:26px">🏠</div><p class="t" style="font-size:13px">Directo a albergue</p><p class="s">95% al albergue · 5% gestión</p>
+        </div>
+        <div class="card mode-opt" data-mode="plataforma" style="flex-direction:column;text-align:center;cursor:pointer">
+          <div style="font-size:26px">🐾</div><p class="t" style="font-size:13px">Directo a PawShot</p><p class="s">Sostiene y escala la app</p>
+        </div>
+      </div>
+      <div id="modeHint" class="small mt8" style="background:var(--brand-light);padding:10px;border-radius:10px">🏠 <b>Directo a albergue:</b> eliges un albergue certificado. El 95% se liquida a la institución con desglose (kg de alimento, vacunas) y el 5% cubre la pasarela e infraestructura.</div>
+
       <h3 class="section">Aporta ahora</h3>
-      <p class="sub">El 100% de tu donación va directo a albergues aliados. Sin comisiones.</p>
       ${DONATION_OPTIONS.map(d=>`
         <div class="card mt8" data-amount="${d.amount}" style="cursor:pointer">
           <div class="avatar" style="background:var(--brand-light);color:var(--brand)">S/.</div>
           <div class="meta"><p class="t">S/. ${d.amount}.00</p><p class="s">${d.desc}</p></div>
           <button class="btn small accent" style="width:auto">Donar</button>
         </div>`).join("")}
-      <div class="small center mt12">Total recaudado este mes: <b>S/. ${IMPACT.total_recaudado.toLocaleString()}</b></div>
+      <div class="small center mt12">Total recaudado este mes: <b>S/. ${IMPACT.total_recaudado.toLocaleString()}</b> · Respaldado por municipalidades y gobiernos locales.</div>
     </div>`;
   $("#b").onclick = back;
+  let donMode = "albergue";
+  const hint = $("#modeHint");
+  $$(".mode-opt", view).forEach(o => o.onclick = ()=>{
+    donMode = o.dataset.mode;
+    $$(".mode-opt", view).forEach(x=>{ x.classList.remove("active"); x.style.border=""; });
+    o.classList.add("active"); o.style.border = "1.5px solid var(--brand)";
+    hint.innerHTML = donMode==="albergue"
+      ? '🏠 <b>Directo a albergue:</b> eliges un albergue certificado. El 95% se liquida a la institución con desglose (kg de alimento, vacunas) y el 5% cubre la pasarela e infraestructura.'
+      : '🐾 <b>Directo a PawShot:</b> el 100% sostiene el desarrollo, soporte y escalamiento tecnológico de la plataforma.';
+  });
   $$("[data-amount]", view).forEach(c => c.onclick = ()=>{
     const amount = c.dataset.amount;
     const u = currentUser();
@@ -1797,9 +2006,227 @@ function scrDonations(){
     badges.donante = (badges.donante||0) + 1;
     badges.donatedTotal = (badges.donatedTotal||0) + Number(amount);
     updateUser({badges, points: u.points + Math.floor(amount/2)});
-    toast(isFirst ? `🎉 ¡Donación de S/. ${amount}! Ganaste la insignia 💝 Donante Solidario` : `💝 Donación S/. ${amount} registrada · +${Math.floor(amount/2)} pts`);
+    const dest = donMode==="albergue" ? "al albergue" : "a la plataforma";
+    toast(isFirst ? `🎉 ¡Donación de S/. ${amount} ${dest}! Ganaste la insignia 💝 Donante Solidario` : `💝 Donación S/. ${amount} ${dest} registrada · +${Math.floor(amount/2)} pts`);
     setTimeout(()=> scrDonations(), 800);
   });
+}
+
+/* ============= MASCOTAS PERDIDAS ============= */
+function scrLostPets(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const activos = LOST_PETS.filter(p=>p.status==="Perdido").sort((a,b)=> (b.boosted?1:0)-(a.boosted?1:0));
+  const encontrados = LOST_PETS.filter(p=>p.status==="Encontrado");
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🔎 Mascotas perdidas</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,#FFE9E4,#FFD1C7);border-color:#FFB4A6">
+        <div class="avatar" style="background:#fff">🔎</div>
+        <div class="meta"><p class="t">Publica gratis a tu mascota perdida</p><p class="s">Opcional: poténciala con un pago simbólico y ofrece una recompensa a quien la encuentre.</p></div>
+      </div>
+      <button class="btn accent mt12" id="pub">➕ Publicar mascota perdida</button>
+
+      <h3 class="section">Perdidas cerca de ti (${activos.length})</h3>
+      ${activos.map(p=>`
+        <div class="card mt8" data-lost="${p.id}" style="cursor:pointer;${p.boosted?'border:1.5px solid #FFB4A6;background:linear-gradient(180deg,#FFF7F5,#fff)':''}">
+          <div class="avatar" style="font-size:30px">${pic(p)}</div>
+          <div class="meta">
+            ${p.boosted?'<div style="background:linear-gradient(90deg,#FF7A59,#FF4D4D);color:#fff;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;display:inline-block;margin-bottom:4px">🚀 POTENCIADA</div>':''}
+            <p class="t">${p.name} · <span class="small">${p.district}</span></p>
+            <p class="s">📍 Visto: ${p.lastSeen} · ${p.date}</p>
+            ${p.reward>0?`<span class="badge warn">🎁 Recompensa S/. ${p.reward}</span>`:''}
+          </div>
+          <span class="rt">›</span>
+        </div>`).join("")}
+
+      ${encontrados.length?`<h3 class="section">Reencuentros felices 🎉</h3>
+      ${encontrados.map(p=>`
+        <div class="card mt8" data-lost="${p.id}" style="cursor:pointer;opacity:.85">
+          <div class="avatar" style="font-size:30px">${pic(p)}</div>
+          <div class="meta"><p class="t">${p.name} · <span class="small">${p.district}</span></p><p class="s">${p.desc}</p></div>
+          <span class="badge ok">Encontrado</span>
+        </div>`).join("")}`:''}
+    </div>`;
+  $("#b").onclick = back;
+  $("#pub").onclick = ()=> go("publishLost");
+  $$("[data-lost]", view).forEach(c=> c.onclick = ()=> go("lostDetail",{id:c.dataset.lost}));
+}
+
+function scrLostDetail({id}){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const p = LOST_PETS.find(x=>x.id===id) || LOST_PETS[0];
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> ${p.name}</div></div>
+    <div class="pad">
+      <div class="card" style="border:1.5px solid var(--brand-light)">
+        <div class="avatar" style="font-size:40px">${pic(p)}</div>
+        <div class="meta"><p class="t">${p.name} · ${p.sex} · ${p.size}</p><p class="s">📍 ${p.lastSeen}</p><p class="s">Última vez: ${p.date}</p></div>
+        <span class="badge ${p.status==="Encontrado"?"ok":"warn"}">${p.status}</span>
+      </div>
+      ${p.reward>0?`<div class="card mt12" style="background:#FFF6CC;border-color:var(--accent)"><div class="avatar" style="background:#fff">🎁</div><div class="meta"><p class="t">Recompensa: S/. ${p.reward}</p><p class="s">Para quien brinde información que lleve a encontrarla.</p></div></div>`:''}
+      <h3 class="section">Descripción</h3>
+      <p class="sub">${p.desc}</p>
+      <h3 class="section">Contacto</h3>
+      <div class="row-link"><div class="lt"><div class="ic">📞</div>${p.contact}</div><div class="rt">›</div></div>
+      ${p.status==="Perdido"?`
+        <button class="btn accent mt16" id="info">📢 Tengo información</button>
+        <button class="btn ghost mt8" id="share">📲 Compartir publicación</button>
+      `:`<div class="card mt16" style="background:#defaee;border-color:#10B981"><div class="avatar" style="background:#fff;color:#10B981">✓</div><div class="meta"><p class="t" style="color:#147346">¡Reencuentro logrado!</p><p class="s">Gracias a la comunidad PawShot.</p></div></div>`}
+    </div>`;
+  $("#b").onclick = back;
+  $("#info")?.addEventListener("click", ()=> go("chat",{name:p.contact.split(" ·")[0], dog:p.name}));
+  $("#share")?.addEventListener("click", ()=> toast("Enlace copiado · comparte para ayudar a encontrar a "+p.name));
+}
+
+function scrPublishLost(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const u = currentUser();
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Publicar mascota perdida</div></div>
+    <div class="pad">
+      <div class="upload"><div class="ic">📷</div><p>Sube una foto de tu mascota</p></div>
+      <div class="label">Nombre</div><input class="input" id="pn" placeholder="Nombre de tu mascota"/>
+      <div class="row mt8">
+        <div><div class="label mt0">Distrito</div>
+          <select class="select" id="pd">${Object.keys(DISTRICT_COORDS).map(x=>`<option ${x===u.district?'selected':''}>${x}</option>`).join("")}</select></div>
+        <div><div class="label mt0">Tamaño</div>
+          <select class="select" id="ps"><option>Pequeño</option><option selected>Mediano</option><option>Grande</option></select></div>
+      </div>
+      <div class="label">¿Dónde la viste por última vez?</div><input class="input" id="pl" placeholder="Ej: Parque Kennedy, Miraflores"/>
+      <div class="label">Descripción</div><textarea class="textarea" id="pdesc" placeholder="Señas particulares, collar, comportamiento..."></textarea>
+      <div class="label">Teléfono de contacto</div><input class="input" id="pc" placeholder="9XX XXX XXX"/>
+
+      <h3 class="section">🎁 Recompensa (opcional)</h3>
+      <p class="sub">Ofrece una recompensa a quien brinde información útil.</p>
+      <div class="label">Monto S/.</div><input class="input" id="pr" type="number" placeholder="0" value="0"/>
+
+      <h3 class="section">🚀 Potenciar publicación (opcional)</h3>
+      <label class="card mt8" style="cursor:pointer" for="boost">
+        <div class="avatar" style="background:#FFE9E4">🚀</div>
+        <div class="meta"><p class="t">Impulso simbólico · S/. 5</p><p class="s">Aparece destacada, con notificación banner y mayor rango de visibilidad.</p></div>
+        <input type="checkbox" id="boost" style="width:20px;height:20px"/>
+      </label>
+
+      <button class="btn accent mt16" id="save">Publicar gratis</button>
+    </div>`;
+  $("#b").onclick = back;
+  $("#boost").addEventListener("change", e=>{ $("#save").textContent = e.target.checked ? "Publicar y potenciar · S/. 5" : "Publicar gratis"; });
+  $("#save").onclick = async ()=>{
+    const name = ($("#pn").value||"Mi mascota").trim();
+    const boost = $("#boost").checked;
+    const dist = $("#pd").value;
+    await store.addLost({
+      name, img:"🐕", district:dist,
+      lat:(DISTRICT_COORDS[dist]||DISTRICT_COORDS.Lima)[0], lng:(DISTRICT_COORDS[dist]||DISTRICT_COORDS.Lima)[1],
+      lastSeen:$("#pl").value||dist, date:"recién", reward:Number($("#pr").value)||0, boosted:boost,
+      status:"Perdido", sex:"—", size:$("#ps").value, contact:(u.name)+" · "+($("#pc").value||"—"), desc:$("#pdesc").value||"Sin descripción."
+    });
+    if(boost) return go("payment",{type:"boost", amount:"5.00"});
+    toast("✅ Publicación creada · ¡Mucha suerte encontrando a "+name+"!");
+    go("lostPets");
+  };
+}
+
+/* ============= APARTADO DE ALBERGUES ============= */
+function scrShelters(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const shelters = shelterList();
+  const totalDogs = shelters.reduce((n,s)=> n+s.dogs.length, 0);
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🏠 Albergues</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,var(--brand-light),#B8E5F5);border-color:var(--brand)">
+        <div class="avatar" style="background:#fff;color:var(--brand)">🏠</div>
+        <div class="meta"><p class="t">${shelters.length} albergues aliados</p><p class="s">${totalDogs} perros esperando un hogar. Explora sus perfiles.</p></div>
+      </div>
+      ${shelters.map(s=>`
+        <div class="card mt12" data-shelter="${encodeURIComponent(s.name)}" style="cursor:pointer;flex-direction:column;align-items:stretch">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div class="avatar" style="background:var(--accent-light);font-size:24px">🏠</div>
+            <div class="meta">
+              <p class="t">${s.name} ${s.premium?'<span style="color:#FFD700">⭐</span>':''}</p>
+              <p class="s">📍 ${s.district} · ${s.dogs.length} en adopción</p>
+            </div>
+            <span class="rt">›</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;font-size:28px">${s.dogs.slice(0,4).map(d=>d.img).join(" ")||'<span class="small" style="font-size:12px;color:var(--muted)">Sin perros publicados aún</span>'}</div>
+        </div>`).join("")}
+    </div>`;
+  $("#b").onclick = back;
+  $$("[data-shelter]", view).forEach(c=> c.onclick = ()=> go("shelterDetail",{name:decodeURIComponent(c.dataset.shelter)}));
+}
+
+function scrShelterDetail({name}){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const s = shelterList().find(x=>x.name===name) || shelterList()[0];
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> ${s.name}</div></div>
+    <div class="pad">
+      <div class="card" style="border:1.5px solid var(--brand-light)">
+        <div class="avatar" style="background:var(--brand-light);font-size:30px">🏠</div>
+        <div class="meta"><p class="t">${s.name} ${s.premium?'<span style="color:#FFD700">⭐ Premium</span>':''}</p><p class="s">📍 ${s.district} · Aliado verificado</p></div>
+      </div>
+      <button class="btn ghost mt12" id="chat">💬 Contactar albergue</button>
+      <h3 class="section">Perros en adopción (${s.dogs.length})</h3>
+      ${s.dogs.length? s.dogs.map(d=>`
+        <div class="card mt8" data-id="${d.id}" style="cursor:pointer">
+          <div class="avatar" style="font-size:28px">${pic(d)}</div>
+          <div class="meta"><p class="t">${d.name} · <span class="small">${d.age} · ${d.sex}</span></p><p class="s">${(d.health||[]).join(" · ")}</p></div>
+          <span class="badge info">En adopción</span>
+        </div>`).join("") : '<p class="sub">Este albergue aún no tiene perros publicados para adopción.</p>'}
+    </div>`;
+  $("#b").onclick = back;
+  $("#chat").onclick = ()=> go("chat",{name:s.name});
+  $$("[data-id]", view).forEach(c=> c.onclick = ()=> go("dogDetail",{id:c.dataset.id}));
+}
+
+/* ============= CENSO DINÁMICO DE ANIMALES EN ABANDONO ============= */
+function scrCensus(){
+  if(!currentUser()) return go("login");
+  hideNav(); view.classList.remove("dark");
+  const rows = censusByDistrict();
+  const max = Math.max(1, ...rows.map(r=>r.total));
+  const tot = rows.reduce((a,r)=>({rep:a.rep+r.reported, res:a.res+r.rescued, haz:a.haz+r.hazards, lost:a.lost+r.lost}), {rep:0,res:0,haz:0,lost:0});
+  const heat = v => v>=0.66?"#EF4444":v>=0.33?"#F59E0B":"#10B981";
+  view.innerHTML = `
+    <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 📊 Censo dinámico</div></div>
+    <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,#1A1F36,#2D3450);border-color:#1A1F36;color:#fff">
+        <div class="avatar" style="background:rgba(255,255,255,.15);color:#fff">🏛️</div>
+        <div class="meta"><p class="t" style="color:#fff">Censo de animales en situación de calle</p><p class="s" style="color:rgba(255,255,255,.85)">Datos abiertos para municipalidades y gobiernos locales · ${SEASON.name}</p></div>
+      </div>
+      <div class="stats" style="margin-top:12px">
+        <div class="s"><div class="n">${tot.rep}</div><div class="l">Reportados</div></div>
+        <div class="s"><div class="n">${tot.res}</div><div class="l">Rescatados</div></div>
+        <div class="s"><div class="n">${tot.haz}</div><div class="l">Zonas riesgo</div></div>
+        <div class="s"><div class="n">${tot.lost}</div><div class="l">Perdidos</div></div>
+      </div>
+      <h3 class="section">Mapa de calor por distrito</h3>
+      <p class="sub">Concentración de casos para focalizar campañas de esterilización, vacunación y fiscalización.</p>
+      ${rows.map(r=>{
+        const v = r.total/max;
+        return `
+        <div class="card mt8" style="flex-direction:column;align-items:stretch">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <b>${r.district}</b>
+            <span class="badge" style="background:${heat(v)}22;color:${heat(v)}">${r.total} casos</span>
+          </div>
+          <div class="progress mt8"><div style="width:${Math.round(v*100)}%;background:${heat(v)}"></div></div>
+          <div class="small mt8" style="display:flex;gap:12px;flex-wrap:wrap;color:var(--muted)">
+            <span>🐕 ${r.reported} reportes</span><span>🚨 ${r.hazards} riesgos</span><span>🔎 ${r.lost} perdidos</span><span>🟢 ${r.rescued} rescatados</span>
+          </div>
+        </div>`;
+      }).join("")}
+      <button class="btn ghost mt16" id="exp">📥 Exportar reporte municipal (CSV)</button>
+      <div class="small center mt8" style="color:var(--muted)">Actualizado en tiempo real con los reportes de la comunidad.</div>
+    </div>`;
+  $("#b").onclick = back;
+  $("#exp").onclick = ()=> toast("Generando reporte para la municipalidad...");
 }
 
 /* ============= CAMPAÑAS COMUNITARIAS ============= */
@@ -2116,6 +2543,7 @@ function scrMap(){
         <span class="chip dot-r" data-f="reported">🟠 Casos activos</span>
         <span class="chip dot-r" data-f="urgent">🚨 Rescates urgentes</span>
         <span class="chip dot-b" data-f="adoption">❤️ Adopción</span>
+        <span class="chip" style="background:#FFE9E4;color:#c0392b" data-f="lost">🔎 Perdidos</span>
         <span class="chip dot-y" data-f="hazards">⚠️ Zonas de riesgo</span>
         <span class="chip" style="background:#ede4ff;color:#5a32cc" data-f="orgs">🏠 Aliados</span>
       </div>
@@ -2133,6 +2561,10 @@ function scrMap(){
     </div>
 
     <div class="quick-actions">
+      <div class="qa" id="qaShelters" style="background:var(--brand-light)"><div class="ic">🏠</div><div><p class="t">Albergues</p><p class="s">Perros en adopción</p></div></div>
+      <div class="qa" id="qaLost" style="background:#FFE9E4"><div class="ic">🔎</div><div><p class="t">Perdidos</p><p class="s">${LOST_PETS.filter(p=>p.status==="Perdido").length} publicaciones</p></div></div>
+    </div>
+    <div class="quick-actions">
       <div class="qa tips" id="qaTips"><div class="ic">💡</div><div><p class="t">Consejos</p><p class="s">Antes de acercarte</p></div></div>
       <div class="qa hazards" id="qaHaz"><div class="ic">⚠️</div><div><p class="t">Peligros</p><p class="s">${HAZARDS.length} alertas activas</p></div></div>
     </div>
@@ -2141,7 +2573,7 @@ function scrMap(){
       <h3 class="section" style="margin-top:8px">Cerca de ti</h3>
       ${DOGS.slice(0,3).map(d=>`
         <div class="card mt8" data-id="${d.id}" style="cursor:pointer">
-          <div class="avatar">${d.img}</div>
+          <div class="avatar">${pic(d)}</div>
           <div class="meta">
             <p class="t">${d.name} · <span class="small">${d.district}</span></p>
             <p class="s">${d.status} · ${d.reportedAt}</p>
@@ -2155,13 +2587,20 @@ function scrMap(){
   $("#filtBtn").onclick = ()=> go("filters");
   $("#qaTips").onclick = ()=> go("tips");
   $("#qaHaz").onclick = ()=> go("hazards");
+  $("#qaShelters").onclick = ()=> go("shelters");
+  $("#qaLost").onclick = ()=> go("lostPets");
 
   /* ---- Mapa real de Perú con Leaflet/OpenStreetMap ---- */
   if(window._lmap){ try{ window._lmap.remove(); }catch(e){} window._lmap = null; }
   const lmap = L.map("leafletMap", { zoomControl:true, attributionControl:true })
     .setView(userCoords, 14);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom:19, attribution:"© OpenStreetMap",
+  // Tiles de Esri/ArcGIS Online: gratuitos, sin API key y sin marca de agua.
+  // Los servidores de OpenStreetMap bloquean el acceso directo desde apps
+  // ("Access blocked") y CARTO estampa "API KEY REQUIRED" sin token.
+  // OJO: Esri usa el orden {z}/{y}/{x} (no {z}/{x}/{y}).
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom:19,
+    attribution:'Tiles © Esri — Source: Esri, HERE, Garmin, © OpenStreetMap contributors',
   }).addTo(lmap);
   window._lmap = lmap;
 
@@ -2184,7 +2623,20 @@ function scrMap(){
           iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-32],
         });
         const m = L.marker([d.lat, d.lng], { icon:ic });
-        m.bindPopup(`<b>${d.name}</b>${d.location||d.district}<br/><span style="color:#888">${d.status}</span><br/><span class="open-btn" onclick="window._openDog('${d.id}')">Ver detalle</span>`);
+        m.bindPopup(`<b>${d.name}</b>${d.location||d.district}<br/><span style="color:#888">${d.status}</span><br/><span class="open-btn" data-dog-id="${d.id}">Ver detalle</span>`);
+        add(m);
+      });
+    }
+    // Mascotas perdidas
+    if(filter==="all" || filter==="lost"){
+      LOST_PETS.filter(p=>p.status==="Perdido").forEach(p => {
+        if(!p.lat || !p.lng) return;
+        const ic = L.divIcon({
+          className:"", html:`<div class="dog-marker" style="background:#c0392b;border-color:#fff">${p.img||"🔎"}</div>`,
+          iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-32],
+        });
+        const m = L.marker([p.lat, p.lng], { icon:ic });
+        m.bindPopup(`<b>${p.name}</b>🔎 Perdido · ${p.lastSeen}<br/>${p.reward>0?`<span style="color:#c0392b">🎁 Recompensa S/. ${p.reward}</span><br/>`:''}<span class="open-btn" data-lost-id="${p.id}">Ver publicación</span>`);
         add(m);
       });
     }
@@ -2198,7 +2650,7 @@ function scrMap(){
           iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-32],
         });
         const m = L.marker([h.lat, h.lng], { icon:ic });
-        m.bindPopup(`<b>${h.t}</b>📍 ${h.loc}<br/><span style="color:#888">${h.ago||"reciente"} · ${h.confirmed||1} confirmaciones</span><br/><span class="open-btn" onclick="window._openHazards()">Ver alertas</span>`);
+        m.bindPopup(`<b>${h.t}</b>📍 ${h.loc}<br/><span style="color:#888">${h.ago||"reciente"} · ${h.confirmed||1} confirmaciones</span><br/><span class="open-btn" data-nav="hazards">Ver alertas</span>`);
         add(m);
       });
     }
@@ -2210,14 +2662,18 @@ function scrMap(){
           iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-32],
         });
         const m = L.marker([v.lat, v.lng], { icon:ic });
-        m.bindPopup(`<b>${v.name}</b>Veterinaria aliada<br/><span class="open-btn" onclick="window._openVets()">Ver descuentos</span>`);
+        m.bindPopup(`<b>${v.name}</b>Veterinaria aliada<br/><span class="open-btn" data-nav="vetDiscounts">Ver descuentos</span>`);
         add(m);
       });
     }
   };
-  window._openDog = (id) => go("dogDetail",{id});
-  window._openHazards = () => go("hazards");
-  window._openVets = () => go("vetDiscounts");
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-dog-id]") || e.target.closest("[data-lost-id]") || e.target.closest("[data-nav]");
+    if(!btn) return;
+    if(btn.dataset.dogId) go("dogDetail",{id: btn.dataset.dogId});
+    else if(btn.dataset.lostId) go("lostDetail",{id: btn.dataset.lostId});
+    else if(btn.dataset.nav) go(btn.dataset.nav);
+  });
 
   renderMarkers("all");
   setTimeout(()=>lmap.invalidateSize(), 100);
@@ -2285,7 +2741,7 @@ function showFabMenu(role){
       </div>
       <div class="card mb0" data-go="subscription" style="cursor:pointer">
         <div class="avatar" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;font-size:24px">⭐</div>
-        <div class="meta"><p class="t">Plan Premium Active</p><p class="s">S/. 49.99/mes · Aparece primero en búsquedas</p></div>
+        <div class="meta"><p class="t">Plan Premium Active</p><p class="s">S/. 49.00/mes · Aparece primero en búsquedas</p></div>
         <span style="font-size:18px">›</span>
       </div>`;
   } else {
@@ -2300,6 +2756,11 @@ function showFabMenu(role){
         <div class="avatar" style="background:var(--accent-light);color:var(--ink);font-size:24px">📸</div>
         <div class="meta"><p class="t">Subir evidencia post-adopción</p><p class="s">Demuestra el bienestar de tu adoptado</p></div>
         <span style="color:var(--ink);font-size:18px">›</span>
+      </div>
+      <div class="card mb0" data-go="publishLost" style="cursor:pointer;margin-bottom:8px">
+        <div class="avatar" style="background:#FFE9E4;color:#c0392b;font-size:24px">🔎</div>
+        <div class="meta"><p class="t">Publicar mascota perdida</p><p class="s">Gratis · opción de potenciar y dar recompensa</p></div>
+        <span style="font-size:18px">›</span>
       </div>
       <div class="card mb0" data-go="reportHazard" style="cursor:pointer;margin-bottom:8px">
         <div class="avatar" style="background:#FEF3C7;color:#92400E;font-size:24px">🚨</div>
@@ -2439,7 +2900,7 @@ function scrDogDetail({id}){
   view.innerHTML = `
     <div class="dog-hero">
       <div class="nav"><button id="b">←</button><button id="fav">♡</button></div>
-      <span>${d.img}</span>
+      <span>${pic(d)}</span>
     </div>
     <div class="pad">
       <h2 class="title">${d.name}</h2>
@@ -2487,7 +2948,7 @@ function scrTakeCase({id}){
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> Caso ${d.caseId}</div></div>
     <div class="pad">
       <div class="card">
-        <div class="avatar">${d.img}</div>
+        <div class="avatar">${pic(d)}</div>
         <div class="meta"><p class="t">${d.name}</p><p class="s">${d.location} · ${d.status}</p></div>
       </div>
       <div style="background:#f7f5f2;border-radius:14px;padding:14px;margin-top:14px;font-size:13px;line-height:1.5;color:#444">
@@ -2692,7 +3153,7 @@ function scrActivity(){
         </div>`).join("");
     } else {
       list = DOGS.filter(d=>d.status==="En adopción").map(d=>`
-        <div class="act-card" data-detail="pub" data-id="${d.id}" style="cursor:pointer"><div class="ph">${d.img}</div><div class="info"><p class="t">${d.name}</p><p class="s">${d.district}</p></div><span class="badge ok">Activo</span></div>`).join("");
+        <div class="act-card" data-detail="pub" data-id="${d.id}" style="cursor:pointer"><div class="ph">${pic(d)}</div><div class="info"><p class="t">${d.name}</p><p class="s">${d.district}</p></div><span class="badge ok">Activo</span></div>`).join("");
     }
   } else {
     if(tab==="sols"){
@@ -2767,22 +3228,47 @@ function scrPoints(){
   showNav("points"); view.classList.remove("dark");
   const u = currentUser();
   const isOrg = u.role==="albergue";
+  const lv = levelFor(u.points);
+  const pct = lv.next ? Math.min(100, Math.round((u.points - lv.cur.min) / (lv.next.min - lv.cur.min) * 100)) : 100;
+  const ranking = seasonRanking();
+  const myPos = ranking.findIndex(r=>r.name===u.name);
   view.innerHTML = `
     <div class="top-app-bar">
-      <div class="left">${isOrg?"Puntos institucionales":"PawPoints"}</div>
-      <div class="right"><button class="icon-btn" id="bf">🏥</button></div>
+      <div class="left">${isOrg?"Nivel institucional":"PawPoints y nivel"}</div>
+      <div class="right"><button class="icon-btn" id="bf">🏅</button></div>
     </div>
     <div class="points-hero">
       <div class="num">${u.points.toLocaleString()}</div>
-      <div class="lvl">${u.level||"Aliado Nivel 1"}</div>
-      <div style="font-size:11.5px;color:#bdbdbd;margin-top:4px">${isOrg?"Acumulados por la organización":"Faltan 750 pts para el siguiente nivel"}</div>
+      <div class="lvl">${lv.cur.ic} ${isOrg?(u.level||lv.cur.name):lv.cur.name}</div>
+      <div style="font-size:11.5px;color:#bdbdbd;margin-top:4px">${lv.next?`Faltan ${lv.toNext.toLocaleString()} pts para ${lv.next.name}`:"¡Nivel máximo alcanzado!"}</div>
     </div>
     <div class="pad">
+      <div class="card" style="background:linear-gradient(135deg,var(--brand-light),#B8E5F5);border-color:var(--brand)">
+        <div class="avatar" style="background:#fff;color:var(--brand)">🏆</div>
+        <div class="meta"><p class="t">${SEASON.name}</p><p class="s">El ranking se reinicia cada 3 meses · termina el ${SEASON.ends}. Los PawPoints <b>no se canjean por premios</b>: definen tu nivel de compromiso y desbloquean insignias y certificados.</p></div>
+      </div>
       ${!isOrg?`
-        <div class="progress"><div style="width:62%;background:var(--brand)"></div></div>
+        <h3 class="section">Tu progreso de nivel</h3>
+        <div class="progress"><div style="width:${pct}%;background:var(--brand)"></div></div>
         <div class="small">Los PawPoints se obtienen <b>solo con acciones reales</b>: reportar casos, confirmar ubicaciones, participar en rescates, adoptar.</div>
-        <button class="btn mt12 accent" id="vet">🏥 Canjear en veterinarias aliadas</button>
-        <button class="btn ghost mt8" id="cert">📜 Mis Certificados de Voluntariado</button>
+        <div class="card mt12" style="background:#FFF6CC;border-color:var(--accent)">
+          <div class="avatar" style="background:#fff">${lv.cur.ic}</div>
+          <div class="meta"><p class="t">Recompensa de tu nivel</p><p class="s">${lv.cur.reward}</p></div>
+        </div>
+
+        <h3 class="section">🏆 Ranking de temporada · tu distrito</h3>
+        ${ranking.slice(0,5).map((r,i)=>`
+          <div class="row-link" style="${r.name===u.name?'background:var(--brand-light);border-radius:10px':''}">
+            <div class="lt"><div class="ic">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>${r.name} <span class="small">· ${r.district}</span></div>
+            <div class="rt"><b>${r.pts.toLocaleString()}</b></div>
+          </div>`).join("")}
+        ${myPos>4?`<div class="small center mt8">Tu posición: <b>#${myPos+1}</b> con ${u.points.toLocaleString()} pts</div>`:''}
+
+        <h3 class="section">Escala de niveles y recompensas</h3>
+        ${LEVELS.map(l=>`
+          <div class="row-link"><div class="lt"><div class="ic" style="${u.points>=l.min?'background:var(--brand-light);color:var(--brand)':''}">${l.ic}</div>${l.name} <span class="small">· ${l.min}+ pts</span></div><div class="rt small" style="text-align:right;max-width:120px">${u.points>=l.min?'✓ ':''}${l.reward}</div></div>`).join("")}
+
+        <button class="btn mt16 accent" id="cert">📜 Mis Certificados de Voluntariado</button>
         <button class="btn ghost mt8" id="badges">🏅 Mis Insignias</button>
         <button class="btn ghost mt8" id="donate">💝 Donaciones transparentes</button>
       `:`
@@ -2791,12 +3277,11 @@ function scrPoints(){
         <div class="row-link"><div class="lt"><div class="ic">❤️</div>Adopciones concretadas</div><div class="rt"><b>+2,400 pts</b></div></div>
         <div class="row-link"><div class="lt"><div class="ic">📸</div>Actualización de perros</div><div class="rt"><b>+380 pts</b></div></div>
         <div class="row-link"><div class="lt"><div class="ic">📜</div>Certificados emitidos</div><div class="rt"><b>+750 pts</b></div></div>
-        <button class="btn mt16" id="vet">🏥 Canjear en veterinarias aliadas</button>
+        <button class="btn mt16 accent" id="cert">📜 Certificaciones de la organización</button>
         <button class="btn ghost mt8" id="an">📊 Ver métricas de negocio</button>
       `}
     </div>`;
-  $("#bf")?.addEventListener("click",()=>go("vetDiscounts"));
-  $("#vet")?.addEventListener("click",()=>go("vetDiscounts"));
+  $("#bf")?.addEventListener("click",()=>go("badges"));
   $("#cert")?.addEventListener("click",()=>go("certifs"));
   $("#badges")?.addEventListener("click",()=>go("badges"));
   $("#donate")?.addEventListener("click",()=>go("donations"));
@@ -2911,15 +3396,14 @@ function scrCertifs(){
 function scrVetDiscounts(){
   if(!currentUser()) return go("login");
   hideNav(); view.classList.remove("dark");
-  const u = currentUser();
   view.innerHTML = `
     <div class="top-app-bar">
-      <div class="left"><button class="back" id="b">←</button> Veterinarias aliadas</div>
+      <div class="left"><button class="back" id="b">←</button> Beneficios de aliados</div>
     </div>
     <div class="pad">
       <div class="card" style="background:linear-gradient(135deg,#f0fff7,#cfeedd);border-color:#bee9d2">
         <div class="avatar" style="background:#fff">🏥</div>
-        <div class="meta"><p class="t">Tus PawPoints valen descuentos</p><p class="s">Canjea ${u.points.toLocaleString()} pts en veterinarias aliadas</p></div>
+        <div class="meta"><p class="t">Promociones de la comunidad</p><p class="s">Veterinarias y pet shops aliados publican beneficios abiertos para toda la comunidad PawShot. Sin canje de puntos.</p></div>
       </div>
       <h3 class="section">Disponibles cerca de ti</h3>
       ${VETS.map(v=>`
@@ -2932,21 +3416,14 @@ function scrVetDiscounts(){
           </div>
           <div class="body">${v.disc}</div>
           <div class="disc">
-            <div class="pts">Costo: <b>${v.pts} pts</b></div>
-            <button class="btn small ${u.points<v.pts?'ghost':''}" data-vet="${v.name}" ${u.points<v.pts?'disabled':''}>${u.points<v.pts?'Faltan pts':'Canjear'}</button>
+            <div class="pts small" style="color:var(--muted)">Muestra tu perfil PawShot en el local</div>
+            <button class="btn small" data-vet="${v.name}">Ver / Contactar</button>
           </div>
         </div>`).join("")}
       <div class="small center mt12">— Más aliados próximamente —</div>
     </div>`;
   $("#b").onclick = back;
-  $$("[data-vet]", view).forEach(b=>b.onclick = ()=>{
-    const v = VETS.find(x=>x.name===b.dataset.vet);
-    const u2 = currentUser();
-    if(u2.points < v.pts){ toast("PawPoints insuficientes"); return; }
-    updateUser({points: u2.points - v.pts});
-    toast(`Canje enviado a ${v.name} ✅`);
-    scrVetDiscounts();
-  });
+  $$("[data-vet]", view).forEach(b=>b.onclick = ()=> go("chat",{name:b.dataset.vet}));
 }
 
 /* ============= Analytics ============= */
@@ -2999,7 +3476,7 @@ function scrProfile(){
   const premiumBadge = isPremium(u) ? `<div style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;margin-top:4px">⭐ ${u.role==="albergue"?"Premium Active":"Aliado Premium"}</div>` : '';
   view.innerHTML = `
     <div class="profile-head">
-      <div class="avatar">${ROLES[u.role].icon}</div>
+      <div class="avatar">${userPic(u)}</div>
       <div class="name" style="${isPremium(u)&&u.role!=='albergue'?'color:#FFD700':''}">${u.name} ${isPremium(u)?'<span style="color:#FFD700">⭐</span>':''}</div>
       <div class="role">${ROLES[u.role].label} · ${u.level||"Nivel 1"}</div>
       ${premiumBadge}
@@ -3013,8 +3490,11 @@ function scrProfile(){
     <div class="pad">
       ${u.role==="admin" ? '<div class="row-link" data-act="adminPanel"><div class="lt"><div class="ic" style="background:#fff3b0;color:#8a5a00">👑</div>Panel de Administración</div><div class="rt"><span class="badge new">Admin</span> ›</div></div>' : ''}
       <div class="row-link" data-act="settings"><div class="lt"><div class="ic">👤</div>Mis datos</div><div class="rt">›</div></div>
-      <div class="row-link" data-act="points"><div class="lt"><div class="ic">🏆</div>Mis PawPoints</div><div class="rt">›</div></div>
-      <div class="row-link" data-act="subscription"><div class="lt"><div class="ic" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff">⭐</div>${isPremium(u)?"Mi Suscripción Premium":"Hazte Premium · S/. "+(u.role==="albergue"?"49.99":"8.99")}</div><div class="rt">${isPremium(u)?'<span class="badge ok">Activa</span>':'<span class="badge new">¡Nuevo!</span>'} ›</div></div>
+      <div class="row-link" data-act="points"><div class="lt"><div class="ic">🏆</div>PawPoints y nivel</div><div class="rt">›</div></div>
+      <div class="row-link" data-act="subscription"><div class="lt"><div class="ic" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff">⭐</div>${isPremium(u)?"Mi Suscripción Premium":"Hazte Premium · S/. "+(u.role==="albergue"?"49.00":"8.99")}</div><div class="rt">${isPremium(u)?'<span class="badge ok">Activa</span>':'<span class="badge new">¡Nuevo!</span>'} ›</div></div>
+      <div class="row-link" data-act="shelters"><div class="lt"><div class="ic" style="background:var(--brand-light)">🏠</div>Albergues · Adopción</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
+      <div class="row-link" data-act="lostPets"><div class="lt"><div class="ic" style="background:#FFE9E4">🔎</div>Mascotas perdidas</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
+      ${u.role==="admin"?'<div class="row-link" data-act="census"><div class="lt"><div class="ic" style="background:#e3e8ff;color:#3a4bcc">📊</div>Censo dinámico (autoridades)</div><div class="rt">›</div></div>':''}
       <div class="row-link" data-act="missions"><div class="lt"><div class="ic" style="background:var(--accent-light)">🎯</div>Misiones del día</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
       <div class="row-link" data-act="badges"><div class="lt"><div class="ic" style="background:var(--accent-light)">🏅</div>Mis Insignias</div><div class="rt">›</div></div>
       <div class="row-link" data-act="certifs"><div class="lt"><div class="ic">📜</div>Certificados de Voluntariado</div><div class="rt"><span class="badge new">Nuevo</span> ›</div></div>
