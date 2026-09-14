@@ -10,24 +10,29 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root{
-    --bg:#F5F7FA;
-    --ink:#1E293B;
-    --ink-2:#334155;
-    --muted:#64748B;
-    --line:#E2E8F0;
-    --soft:#F8FAFC;
+    /* Paleta alineada al afiche: teal-verde + naranja + oliva + dorado, sobre crema cálido */
+    --bg:#F4F1EA;
+    --ink:#20302C;
+    --ink-2:#3A4A45;
+    --muted:#6E7C77;
+    --line:#E6E2D8;
+    --soft:#FAF8F2;
     --white:#ffffff;
-    --brand:#00A3E0;
-    --brand-dark:#0086B8;
-    --brand-light:#E0F4FB;
-    --accent:#FFD100;
-    --accent-dark:#E6BB00;
-    --accent-light:#FFF6CC;
-    --green:#10B981;
-    --red:#EF4444;
-    --orange:#F59E0B;
-    --purple:#8B5CF6;
-    --shadow:0 20px 50px rgba(0,40,80,.12), 0 6px 14px rgba(0,40,80,.06);
+    --brand:#1E6B5E;
+    --brand-dark:#154C42;
+    --brand-light:#E1EFEB;
+    --accent:#EC7A2D;
+    --accent-dark:#D2641A;
+    --accent-light:#FCEBDD;
+    --sage:#7E9350;
+    --sage-light:#EDF1E3;
+    --gold:#E8A23A;
+    --gold-light:#FBEBCF;
+    --green:#1FA36B;
+    --red:#E15646;
+    --orange:#EC7A2D;
+    --purple:#7C5CBF;
+    --shadow:0 18px 44px rgba(20,55,45,.13), 0 6px 14px rgba(20,55,45,.06);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--ink);min-height:100%}
@@ -92,20 +97,21 @@
     width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
     font-size:14px;outline:none;color:#111;font-family:inherit;
   }
-  .input:focus,.select:focus,.textarea:focus{border-color:#111}
+  .input:focus,.select:focus,.textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(30,107,94,.12)}
   .textarea{min-height:80px;resize:vertical}
   .label{font-size:11px;letter-spacing:1px;color:#222;font-weight:700;margin:14px 0 6px;text-transform:uppercase}
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
     background:var(--brand);color:#fff;border:0;border-radius:14px;padding:14px 18px;width:100%;
     font-size:14.5px;font-weight:600;cursor:pointer;letter-spacing:.2px;font-family:inherit;
-    box-shadow:0 4px 12px rgba(0,163,224,.25);transition:transform .1s, box-shadow .15s;
+    box-shadow:0 4px 12px rgba(30,107,94,.28);transition:transform .1s, box-shadow .15s;
   }
-  .btn:hover{box-shadow:0 6px 16px rgba(0,163,224,.35)}
+  .btn:hover{box-shadow:0 6px 16px rgba(30,107,94,.36)}
   .btn:active{transform:translateY(1px)}
   .btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand);box-shadow:none}
   .btn.dark{background:var(--ink);color:#fff;box-shadow:0 4px 12px rgba(30,41,59,.2)}
-  .btn.accent{background:var(--accent);color:var(--ink);box-shadow:0 4px 12px rgba(255,209,0,.35)}
+  .btn.accent{background:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(236,122,45,.38)}
+  .btn.sage{background:var(--sage);color:#fff;box-shadow:0 6px 16px rgba(126,147,80,.32)}
   .btn.small{padding:9px 14px;font-size:12.5px;width:auto}
   .btn.danger{background:var(--red);box-shadow:0 4px 12px rgba(239,68,68,.25)}
   .btn[disabled]{opacity:.45;cursor:not-allowed}
@@ -192,22 +198,49 @@
 
   /* ============== Login (Entry) ============== */
   .login-bg{
-    height:100%;background:linear-gradient(180deg,#0e0e0e 0%,#1c1c1c 38%,#fff 38%,#fff 100%);
-    display:flex;flex-direction:column;
+    height:100%;background:var(--brand-dark);display:flex;flex-direction:column;overflow-y:auto;
   }
-  .login-top{padding:42px 22px 22px;color:#fff;text-align:center}
-  .login-top .logo{
-    width:64px;height:64px;border-radius:50%;background:#1f1f1f;display:flex;align-items:center;justify-content:center;
-    font-size:30px;margin:0 auto 8px;border:1px solid #2f2f2f;
+  .login-bg::-webkit-scrollbar{width:0}
+  .login-hero{
+    position:relative;flex-shrink:0;padding:32px 22px 52px;color:#fff;text-align:center;
+    background:radial-gradient(120% 90% at 50% -10%, #2a8576 0%, var(--brand) 45%, var(--brand-dark) 100%);
+    overflow:hidden;
   }
-  .login-top h1{font-size:26px;margin:6px 0 4px;letter-spacing:-.5px}
-  .login-top .tag{color:#bdbdbd;font-size:12.5px;margin-bottom:10px}
+  .login-hero:before{
+    content:"🐾";position:absolute;font-size:190px;opacity:.06;right:-30px;top:-20px;transform:rotate(-15deg);pointer-events:none;
+  }
+  .login-hero:after{
+    content:"🐾";position:absolute;font-size:120px;opacity:.05;left:-20px;bottom:20px;transform:rotate(10deg);pointer-events:none;
+  }
+  .login-hero .logo{
+    width:66px;height:66px;border-radius:20px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;
+    font-size:34px;margin:0 auto 12px;border:1px solid rgba(255,255,255,.25);box-shadow:0 8px 20px rgba(0,0,0,.15);position:relative;
+  }
+  .login-hero h1{font-size:34px;margin:2px 0 8px;letter-spacing:-1px;font-weight:800;position:relative}
+  .login-hero .tag{font-size:16px;font-weight:800;letter-spacing:-.2px;position:relative}
+  .login-hero .tag .c1{color:#fff}
+  .login-hero .tag .c2{color:var(--accent)}
+  .login-hero .tag .c3{color:#CFE3B5}
+  .login-hero .subtitle{color:rgba(255,255,255,.8);font-size:12px;margin-top:8px;position:relative}
+  .login-stats{display:flex;gap:8px;margin-top:18px;position:relative}
+  .login-stats .st{
+    flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:9px 6px;
+  }
+  .login-stats .st .n{font-size:18px;font-weight:800;line-height:1}
+  .login-stats .st .l{font-size:9px;opacity:.85;text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
   .login-card{
-    background:#fff;border-radius:24px 24px 0 0;padding:22px;flex:1;
-    box-shadow:0 -10px 30px rgba(0,0,0,.15);overflow-y:auto;
+    background:#fff;border-radius:26px 26px 0 0;padding:22px 22px 28px;flex:1;margin-top:-34px;position:relative;z-index:2;
+    box-shadow:0 -12px 30px rgba(0,0,0,.18);
   }
-  .login-card h3{margin:0 0 4px;font-size:16px}
-  .login-card .muted{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+  .login-card h3{margin:0 0 4px;font-size:18px;font-weight:800}
+  .login-card .muted{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .login-feats{margin-top:6px}
+  .login-feats .feat{display:flex;align-items:center;gap:12px;padding:9px 0}
+  .login-feats .feat .fic{
+    width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+  }
+  .login-feats .feat .ft{font-weight:700;font-size:13.5px;margin:0}
+  .login-feats .feat .fs{color:var(--muted);font-size:12px;margin:1px 0 0}
 
   .demo-user{
     display:flex;align-items:center;gap:12px;background:#fafaf8;border:1px solid var(--line);
@@ -309,17 +342,17 @@
     background:rgba(255,255,255,.95);box-shadow:0 4px 10px rgba(0,0,0,.08);border:1px solid var(--line);
     white-space:nowrap;
   }
-  .map-chips .chip.active{background:#111;color:#fff;border-color:#111}
+  .map-chips .chip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
   .fab{
-    position:absolute;right:16px;bottom:16px;width:68px;height:68px;border-radius:50%;background:var(--accent);color:var(--ink);
+    position:absolute;right:16px;bottom:16px;width:68px;height:68px;border-radius:50%;background:var(--accent);color:#fff;
     display:flex;align-items:center;justify-content:center;font-size:38px;cursor:pointer;
-    box-shadow:0 12px 30px rgba(255,209,0,.55), 0 4px 12px rgba(0,0,0,.2);
+    box-shadow:0 12px 30px rgba(236,122,45,.5), 0 4px 12px rgba(0,0,0,.2);
     border:3px solid #fff;font-family:inherit;font-weight:300;line-height:1;z-index:20;
     animation:fabPulse 2.5s ease-in-out infinite;
   }
   @keyframes fabPulse{
-    0%,100%{box-shadow:0 12px 30px rgba(255,209,0,.55), 0 4px 12px rgba(0,0,0,.2)}
-    50%{box-shadow:0 0 0 10px rgba(255,209,0,.18), 0 12px 30px rgba(255,209,0,.55), 0 4px 12px rgba(0,0,0,.2)}
+    0%,100%{box-shadow:0 12px 30px rgba(236,122,45,.5), 0 4px 12px rgba(0,0,0,.2)}
+    50%{box-shadow:0 0 0 10px rgba(236,122,45,.18), 0 12px 30px rgba(236,122,45,.5), 0 4px 12px rgba(0,0,0,.2)}
   }
   .fab:hover{transform:scale(1.08);animation:none}
   .fab-label{
@@ -356,10 +389,10 @@
 
   /* PawPoints */
   .points-hero{
-    margin:10px 18px;background:#101010;color:#fff;border-radius:22px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:8px;
+    margin:10px 18px;background:linear-gradient(150deg,var(--brand),var(--brand-dark));color:#fff;border-radius:22px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 12px 26px rgba(20,55,45,.22);
   }
-  .points-hero .num{font-size:38px;font-weight:700;letter-spacing:-1px}
-  .points-hero .lvl{background:#1f1f1f;padding:6px 12px;border-radius:999px;font-size:12px;color:#f4c46b;font-weight:600}
+  .points-hero .num{font-size:38px;font-weight:800;letter-spacing:-1px}
+  .points-hero .lvl{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:999px;font-size:12px;color:#FBE0A6;font-weight:700}
   .progress{height:6px;background:#f1efeb;border-radius:6px;overflow:hidden;margin:8px 0}
   .progress > div{height:100%;background:#111;border-radius:6px}
   .promo{
@@ -444,10 +477,10 @@
   .cert.gold{border-left:6px solid #d4af37;opacity:.75}
 
   /* Profile */
-  .profile-head{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px;background:#0e0e0e;color:#fff}
-  .profile-head .avatar{width:74px;height:74px;border-radius:50%;background:#1c1c1c;display:flex;align-items:center;justify-content:center;font-size:32px;border:1px solid #2a2a2a}
-  .profile-head .name{font-size:17px;font-weight:700;margin-top:6px}
-  .profile-head .role{font-size:12px;color:#bdbdbd}
+  .profile-head{display:flex;flex-direction:column;align-items:center;gap:6px;padding:24px 18px;background:radial-gradient(120% 100% at 50% 0%, #2a8576 0%, var(--brand) 50%, var(--brand-dark) 100%);color:#fff}
+  .profile-head .avatar{width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:32px;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+  .profile-head .name{font-size:18px;font-weight:800;margin-top:6px}
+  .profile-head .role{font-size:12px;color:rgba(255,255,255,.82)}
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:14px;background:#fff;border-bottom:1px solid var(--line)}
   .stats .s{text-align:center}
   .stats .s .n{font-weight:700;font-size:17px}
@@ -466,12 +499,12 @@
 
   /* Tips screens */
   .tip-hero{
-    background:linear-gradient(135deg,#defaee,#b6e8cd);padding:16px 18px;border-radius:16px;margin:14px 18px;
+    background:linear-gradient(135deg,var(--brand-light),#C6E3DB);padding:16px 18px;border-radius:16px;margin:14px 18px;
     display:flex;gap:12px;align-items:center;
   }
   .tip-hero .ic{font-size:30px}
-  .tip-hero .t{font-weight:700;font-size:14.5px;margin:0}
-  .tip-hero .s{font-size:11.5px;color:#266b48;margin:2px 0 0}
+  .tip-hero .t{font-weight:700;font-size:14.5px;margin:0;color:var(--brand-dark)}
+  .tip-hero .s{font-size:11.5px;color:var(--brand);margin:2px 0 0}
   .tip-card{
     background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;
   }
@@ -1297,7 +1330,7 @@ function openSideMenu(){
     </div>
     <div class="items">
       ${adminBtn}
-      <button data-go="subscription" style="background:linear-gradient(90deg,#FFF7D6,#FFE680);font-weight:700"><span class="ic" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff">⭐</span>${isPremium(u)?"Mi Suscripción Premium":"Hazte Premium"}</button>
+      <button data-go="subscription" style="background:linear-gradient(90deg,#FBEBCF,#F3D08A);font-weight:700"><span class="ic" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff">⭐</span>${isPremium(u)?"Mi Suscripción Premium":"Hazte Premium"}</button>
       <div class="sep"></div>
       <button data-go="map"><span class="ic">🗺️</span>Mapa interactivo</button>
       <button data-go="shelters"><span class="ic">🏠</span>Albergues · Adopción</button>
@@ -1393,7 +1426,7 @@ function scrMissions(){
   view.innerHTML = `
     <div class="top-app-bar"><div class="left">🎯 ${isOrg?"Misiones de Albergue":"Misiones del día"}</div></div>
     <div class="pad">
-      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
+      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#F3D08A);border-color:var(--accent)">
         <div class="avatar" style="background:#fff;font-size:28px">${isOrg?"🏢":"🎯"}</div>
         <div class="meta"><p class="t">${isOrg?"Acciones para tu organización":"Cumple misiones, gana PawPoints"}</p><p class="s">${isOrg?"Recibe casos, aprueba adopciones, crea campañas y misiones para tu comunidad.":"Las misiones tienen tiempo de espera para evitar abusos. Solo cuentan acciones reales."}</p></div>
       </div>
@@ -1442,7 +1475,7 @@ function scrCreateCampaign(){
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 📣 Crear campaña</div></div>
     <div class="pad">
-      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
+      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#F3D08A);border-color:var(--accent)">
         <div class="avatar" style="background:#fff;font-size:24px">📣</div>
         <div class="meta"><p class="t">Nueva campaña comunitaria</p><p class="s">Convoca voluntarios y patrocinadores</p></div>
       </div>
@@ -1578,7 +1611,7 @@ function scrMyCreations(){
       </div>
 
       ${tab==='campaigns' ? `
-        <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
+        <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#F3D08A);border-color:var(--accent)">
           <div class="avatar" style="background:#fff">📣</div>
           <div class="meta"><p class="t">4 campañas activas</p><p class="s">504 participantes en total</p></div>
         </div>
@@ -1911,7 +1944,7 @@ function scrBadges(){
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🏅 Mis Insignias</div></div>
     <div class="pad">
-      <div class="card" style="background:linear-gradient(135deg,#FFF6CC,#FFE680);border-color:var(--accent)">
+      <div class="card" style="background:linear-gradient(135deg,#FBEBCF,#F3D08A);border-color:var(--accent)">
         <div class="avatar" style="background:#fff">🏆</div>
         <div class="meta"><p class="t">Logros desbloqueados</p><p class="s">Acumula acciones reales para obtener nuevas insignias</p></div>
       </div>
@@ -1951,7 +1984,7 @@ function scrDonations(){
           <div style="font-size:28px;font-weight:800;color:var(--brand)">${IMPACT.alimento_kg}</div>
           <div class="small"><b>kg de alimento</b><br/>entregado</div>
         </div>
-        <div class="card" style="flex-direction:column;text-align:center;background:#FFF6CC;border-color:var(--accent)">
+        <div class="card" style="flex-direction:column;text-align:center;background:#FBEBCF;border-color:var(--accent)">
           <div style="font-size:28px;font-weight:800;color:var(--ink)">${IMPACT.vacunas}</div>
           <div class="small"><b>vacunas</b><br/>financiadas</div>
         </div>
@@ -2065,7 +2098,7 @@ function scrLostDetail({id}){
         <div class="meta"><p class="t">${p.name} · ${p.sex} · ${p.size}</p><p class="s">📍 ${p.lastSeen}</p><p class="s">Última vez: ${p.date}</p></div>
         <span class="badge ${p.status==="Encontrado"?"ok":"warn"}">${p.status}</span>
       </div>
-      ${p.reward>0?`<div class="card mt12" style="background:#FFF6CC;border-color:var(--accent)"><div class="avatar" style="background:#fff">🎁</div><div class="meta"><p class="t">Recompensa: S/. ${p.reward}</p><p class="s">Para quien brinde información que lleve a encontrarla.</p></div></div>`:''}
+      ${p.reward>0?`<div class="card mt12" style="background:#FBEBCF;border-color:var(--accent)"><div class="avatar" style="background:#fff">🎁</div><div class="meta"><p class="t">Recompensa: S/. ${p.reward}</p><p class="s">Para quien brinde información que lleve a encontrarla.</p></div></div>`:''}
       <h3 class="section">Descripción</h3>
       <p class="sub">${p.desc}</p>
       <h3 class="section">Contacto</h3>
@@ -2236,7 +2269,7 @@ function scrCampaigns(){
   view.innerHTML = `
     <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🎯 Campañas</div></div>
     <div class="pad">
-      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#FFE680);border-color:var(--accent)">
+      <div class="card" style="background:linear-gradient(135deg,var(--accent-light),#F3D08A);border-color:var(--accent)">
         <div class="avatar" style="background:#fff">📣</div>
         <div class="meta"><p class="t">Únete a una campaña</p><p class="s">Patrocinadas por marcas aliadas · Gana PawPoints participando</p></div>
       </div>
@@ -2354,19 +2387,25 @@ async function scrAdminPanel(){
 function scrLogin(){
   hideNav();
   view.classList.remove("dark");
+  const activos = DOGS.filter(d=>["Reportado","Recibiendo ayuda","Rescate en proceso","En seguimiento"].includes(d.status)).length;
+  const enAdopcion = DOGS.filter(d=>d.status==="En adopción").length;
   view.innerHTML = `
     <div class="login-bg">
-      <div class="login-top">
+      <div class="login-hero">
         <div class="logo">🐾</div>
         <h1>PawShot</h1>
-        <div class="tag">Captura. Rescata. Adopta.</div>
-        <div style="color:#bdbdbd;font-size:11.5px;margin-top:6px">Red colaborativa de bienestar animal</div>
+        <div class="tag"><span class="c1">Captura.</span> <span class="c2">Rescata.</span> <span class="c3">Adopta.</span></div>
+        <div class="subtitle">Red colaborativa de bienestar animal · Lima, Perú</div>
+        <div class="login-stats">
+          <div class="st"><div class="n">1,200+</div><div class="l">Rescatados</div></div>
+          <div class="st"><div class="n">${activos}</div><div class="l">Casos activos</div></div>
+          <div class="st"><div class="n">${enAdopcion}</div><div class="l">En adopción</div></div>
+        </div>
       </div>
       <div class="login-card">
-        <h3>Bienvenido 🐾</h3>
-        <div class="muted">Únete a la comunidad que está cambiando vidas.</div>
-        <div class="mt16"></div>
-        <button class="btn" id="toReg" style="font-size:15.5px;padding:16px 20px">Crear cuenta gratis</button>
+        <h3>Cada reporte puede salvar una vida</h3>
+        <div class="muted">Únete a la comunidad que está cambiando vidas, un perrito a la vez.</div>
+        <button class="btn accent" id="toReg" style="font-size:15.5px;padding:16px 20px">Crear cuenta gratis</button>
         <button class="btn ghost mt8" id="toLogin">Ya tengo cuenta</button>
         <div class="login-form" id="loginForm" style="display:none">
           <div class="divider">Inicia sesión</div>
@@ -2377,9 +2416,15 @@ function scrLogin(){
           <div class="mt12"></div>
           <button class="btn" id="doLogin">Entrar</button>
         </div>
-        <div class="small center mt16" style="line-height:1.5">
-          🐾 + de <b>1,200 perros</b> rescatados<br/>
-          📍 Activo en Lima, Perú · Gratis para siempre
+        <div class="login-feats">
+          <div class="feat"><div class="fic" style="background:var(--accent-light);color:var(--accent-dark)">📍</div><div><p class="ft">Reportes geolocalizados</p><p class="fs">Reporta un perrito desde tu ubicación.</p></div></div>
+          <div class="feat"><div class="fic" style="background:var(--sage-light);color:var(--sage)">📊</div><div><p class="ft">Seguimiento de casos</p><p class="fs">Conoce cómo avanza el rescate y su recuperación.</p></div></div>
+          <div class="feat"><div class="fic" style="background:var(--gold-light);color:var(--gold)">🏆</div><div><p class="ft">PawPoints y gamificación</p><p class="fs">Gana puntos, insignias y certificados.</p></div></div>
+          <div class="feat"><div class="fic" style="background:#EEE8F8;color:var(--purple)">💬</div><div><p class="ft">Chat colaborativo</p><p class="fs">Conecta con albergues, veterinarias y aliados.</p></div></div>
+        </div>
+        <div class="small center mt16" style="line-height:1.6;color:var(--muted)">
+          🐾 <b>Gratis para siempre</b> · Sé parte del cambio<br/>
+          <span style="color:var(--sage)">🌱 Un mundo mejor también es posible</span>
         </div>
       </div>
     </div>`;
@@ -2768,7 +2813,7 @@ function showFabMenu(role){
         <span style="font-size:18px">›</span>
       </div>
       <div class="card mb0" data-go="missions" style="cursor:pointer">
-        <div class="avatar" style="background:#FFF6CC;color:#B45309;font-size:24px">🎯</div>
+        <div class="avatar" style="background:#FBEBCF;color:#B45309;font-size:24px">🎯</div>
         <div class="meta"><p class="t">Ver mis misiones</p><p class="s">Cumple acciones y gana PawPoints</p></div>
         <span style="font-size:18px">›</span>
       </div>`;
@@ -3251,7 +3296,7 @@ function scrPoints(){
         <h3 class="section">Tu progreso de nivel</h3>
         <div class="progress"><div style="width:${pct}%;background:var(--brand)"></div></div>
         <div class="small">Los PawPoints se obtienen <b>solo con acciones reales</b>: reportar casos, confirmar ubicaciones, participar en rescates, adoptar.</div>
-        <div class="card mt12" style="background:#FFF6CC;border-color:var(--accent)">
+        <div class="card mt12" style="background:#FBEBCF;border-color:var(--accent)">
           <div class="avatar" style="background:#fff">${lv.cur.ic}</div>
           <div class="meta"><p class="t">Recompensa de tu nivel</p><p class="s">${lv.cur.reward}</p></div>
         </div>
@@ -3299,7 +3344,7 @@ function scrCertifs(){
     view.innerHTML = `
       <div class="top-app-bar"><div class="left"><button class="back" id="b">←</button> 🏢 Certificaciones de Albergue</div></div>
       <div class="pad">
-        <div class="card" style="background:linear-gradient(135deg,#FFF6CC,#FFE680);border-color:var(--accent)">
+        <div class="card" style="background:linear-gradient(135deg,#FBEBCF,#F3D08A);border-color:var(--accent)">
           <div class="avatar" style="background:#fff;font-size:28px">🏆</div>
           <div class="meta"><p class="t">Aliado Verificado · Nivel 3</p><p class="s">Reconocimiento por trayectoria y certificados emitidos</p></div>
         </div>
